@@ -24,3 +24,166 @@
 @import "~@ionic/angular/css/text-alignment.css";
 @import "~@ionic/angular/css/text-transformation.css";
 @import "~@ionic/angular/css/flex-utils.css";
+
+/* You can add global styles to this file, and also import other style files */
+:root {
+  --primary-color: #0d1838;
+  --primary-color-light: #00b3e6;
+  --background-color: #fff;
+  --text-color: #4d4d4d;
+  --text-color-light: #fff;
+  --table-background-color: #0d1838;
+  --table-grey-color: #d3d3d3;
+  --table-grey-color-darker: #acacac;
+}
+
+body {
+  background-color: var(--background-color);
+  color: var(--text-color);
+  font-family: Lato;
+  padding: 0;
+  margin: 0;
+}
+/* Provide sufficient contrast against white background */
+a {
+  color: #0366d6;
+}
+
+code {
+  color: #e01a76;
+}
+
+.btn-primary {
+  color: #fff;
+  background-color: #1b6ec2;
+  border-color: #1861ac;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+.card-img-top {
+  height: 200px;
+}
+/* Structure */
+table {
+  width: 100%;
+}
+
+.mat-form-field {
+  font-size: 14px;
+  width: 100%;
+}
+
+.pageExplanation {
+  color: green;
+  border: 1px solid;
+  font-size: 14px;
+  padding: 10px;
+}
+
+.detailsTable {
+  width: 100%;
+  background-color: var( --table-grey-color);
+  background-color: var( --table-grey-color);
+  color: black;
+}
+
+.mat-cell {
+  color: black;
+}
+
+.mat-paginator, .mat-header-cell {
+  background-color: var( --primary-color-light);
+  background-color: var( --table-background-color);
+}
+
+.mat-row:nth-child(even) {
+  background-color: var(--table-grey-color);
+}
+
+.mat-row:nth-child(odd) {
+  background-color: var(--table-grey-color-darker);
+  color: black;
+}
+
+.mat-row:nth-child(odd) .mat-cell {
+  color: black;
+}
+
+.mat-row:nth-child(even):hover, .mat-row:nth-child(odd):hover {
+  background-color: var(--primary-color-light);
+  cursor: pointer;
+}
+
+@media screen and (min-width: 600px) {
+  .ion-card {
+    width: 350px;
+    margin: 10px;
+  }
+}
+
+@media screen and (max-width: 599px) {
+  ion-card {
+    /*width: 250px;*/
+    width: 90%;
+    margin-bottom: 5px;
+    margin-left: auto;
+    margin-right: auto;
+    /*margin: auto;*/
+  }
+}
+
+ion-card {
+  /* min-width : 350px;*/
+  background-color: var(--primary-color-light);
+  color: var(--text-color-light) !important;
+}
+
+.card .homescreen {
+  height: 350px;
+}
+
+.mat-autocomplete-trigger {
+  width: 100% !important;
+  background-color: var(--primary-color-light);
+  color: var(--primary-color) !important;
+}
+
+.mat-autocomplete {
+}
+
+.mat-option {
+  background-color: var(--primary-color-light);
+  color: var(--text-color-light) !important;
+}
+
+.mat-form-field-flex {
+  border: 1px solid #ced4da;
+  border-radius: .25rem;
+  transition: border-color .15s
+}
+
+.cdk-global-overlay-wrapper, .cdk-overlay-container {
+  z-index: 9999 !important;
+}
+
+.cc-revoke {
+  display: none;
+}
+
+.example-radio-group {
+  display: flex;
+  flex-direction: column;
+  margin: 15px 0;
+}
+
+.example-radio-button {
+  margin: 5px;
+}

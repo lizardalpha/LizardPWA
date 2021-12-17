@@ -1,0 +1,59 @@
+<ion-content class="ion-padding">
+
+  <ion-segment [(ngModel)]="segment" scrollable>
+    <ion-segment-button value="pending">
+      Pending
+    </ion-segment-button>
+    <ion-segment-button value="completed">
+      Completed
+    </ion-segment-button>
+ 
+  </ion-segment>
+
+
+  <div [ngSwitch]="segment">
+    <div *ngSwitchCase="'pending'">
+      <ion-card *ngFor="let visits of storeInstallationsFiltered">
+        <ion-card-header>
+          {{visits.qtyToInstall}} x {{visits.mediaType}}
+        </ion-card-header>
+        <ion-card-content>
+          <span>
+            <b>{{visits.product}} : </b> {{visits.categoryName}}<br />
+
+          </span>
+          <div *ngIf="visits.masterItemWithBarcodes">
+            <span *ngIf="visits.masterItemWithBarcodes.length > 1">
+              Items Required for installation :
+              <tr *ngFor="let mediaCapexOpex of visits.masterItemWithBarcodes"><td *ngIf="mediaCapexOpex.masterItemName && mediaCapexOpex.masterItemId > 0"> {{mediaCapexOpex.masterItemName}} x {{mediaCapexOpex.amountRequired}}</td></tr>
+            </span>
+            <span *ngIf="visits.masterItemWithBarcodes.length == 1">
+              Item Required for installation :
+              <tr *ngFor="let masterItem of visits.masterItem"><td> {{masterItem.masterItemName}}</td></tr>
+            </span>
+          </div>
+
+          <div *ngIf="visits.masterItemGroupWithBarcodes">
+            <span *ngIf="visits.masterItemGroupWithBarcodes.length > 1">
+              Items Required for installation :
+              <tr *ngFor="let mediaCapexOpex of visits.masterItemGroupWithBarcodes"><td *ngIf="mediaCapexOpex.masterItemName && mediaCapexOpex.masterItemId > 0"> {{mediaCapexOpex.masterItemName}} x {{mediaCapexOpex.amountRequired}}</td></tr>
+            </span>
+            <span *ngIf="visits.masterItemGroupWithBarcodes.length == 1">
+              Item Required for installation :
+              <tr *ngFor="let masterItem of visits.masterItemGroupWithBarcodes"><td> {{masterItem.masterItemGroupName}}</td></tr>
+            </span>
+          </div>
+
+        </ion-card-content>
+      </ion-card>
+    </div>
+    <ion-card *ngSwitchCase="'completed'">
+      <ion-card-header>
+        Second Header
+      </ion-card-header>
+      <ion-card-content>
+        Second content here
+      </ion-card-content>
+    </ion-card>
+    </div>
+</ion-content>

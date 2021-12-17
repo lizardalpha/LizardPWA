@@ -1,0 +1,41 @@
+a.navbar-brand {
+  white-space: normal;
+  text-align: center;
+  word-break: break-all;
+}
+
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.box-shadow {
+  box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
+}
+
+.navbar-brand {
+  background-color: var(--primary-color);
+  color: var(--text-color-light);
+}
+
+.navbar-light {
+  background-color: var(--primary-color) !important;
+  color: var(--text-color-light) !important;
+}
+
+.nav-link {
+  color: var(--text-color-light) !important;
+}
+
+.navbar .navbar-toggler-icon {
+  background-image: url('https://mdbootstrap.com/img/svg/hamburger3.svg?color=fff');
+}
+
+.text-blue {
+  color: black;
+}

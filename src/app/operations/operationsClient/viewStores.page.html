@@ -1,0 +1,32 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>
+      Capacitor PWA
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+<ion-content>
+  <ion-button expand="full" size="small" [routerLink]="['/Operations/Installations']">Full Button</ion-button>
+  <ion-button expand="full" size="small" (click)="viewCompletedVisitsMethod(viewCompletedVisits)">{{ViewVisitText}}</ion-button>
+  <ion-button expand="full" size="small"  (click)="viewStockForStores()">{{ViewStockText}}</ion-button>
+  <ion-button expand="full" size="small"  (click)="refreshStoreList()">Refresh Store List</ion-button>
+  <h2 *ngIf="currentSpeedSlow">You are now in offline mode and have to sync your stores when you have good connection.</h2>
+  <div *ngFor="let store of storeVisist ">
+    <ion-card *ngIf="store.storeVisitCompleted == viewCompletedVisits" [ngClass]="{'bg-primary mb-3': store.storeVisitCompleted != true ,'bg-success  mb-3' : store.storeVisitCompleted == true }" (click)="getDetailsForStore(store)">
+      <ion-card-header >
+
+        <ion-card-title>{{store.chainName}} - {{store.storeName}}</ion-card-title>
+        <ion-card-subtitle>{{store.storeInstallDay}} with date of {{store.forDate}}</ion-card-subtitle>
+      </ion-card-header>
+
+      <ion-card-content >
+
+      </ion-card-content>
+      
+          <ion-button class="btn btn-success" *ngIf="store.storeVisitOutOfSync && !currentSpeedSlow" (click)="syncStore(store)">Sync This Store</ion-button>
+        
+     
+    </ion-card>
+
+  </div>
+</ion-content>
