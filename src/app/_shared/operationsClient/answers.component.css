@@ -1,0 +1,24 @@
+.upload {
+  font-weight: bold;
+  color: #28a745;
+  margin-left: 15px;
+  line-height: 36px;
+}
+.ircodes {
+  
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width : 280px;
+}
+optgroup {
+  
+  font-size: 10px;
+ 
+}
+.forceCommentBlock {
+/*  height: 300px;
+ max-width:290px;
+  left: auto;
+  right: auto;*/
+}

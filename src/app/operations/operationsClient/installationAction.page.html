@@ -1,7 +1,72 @@
-<ion-card>
-  <ion-card-header>
 
-    <!--<ion-card-title>{{action.categoryName}}</ion-card-title>
-    <ion-card-subtitle>{{action.qtyToInstall}} x {{action.mediaType}} - {{action.product}}</ion-card-subtitle>-->
-  </ion-card-header>
-</ion-card>
+<ion-content>
+  <ion-card scrollY="true">
+  
+
+      <ion-card-header>
+
+        <ion-card-title>{{action.categoryName}}</ion-card-title>
+        <ion-card-subtitle>{{action.qtyToInstall}} x {{action.mediaType}} - {{action.product}}</ion-card-subtitle>
+      </ion-card-header>
+      <ion-card-content scrollY="true">
+        <span>{{action.client}}</span><br />
+
+        <h5>Special Instructions</h5>
+        <span>{{action.installationInstructions}}</span><br />
+        <ion-button *ngIf="!action.campaignSpecialInstructionsRead" (click)="acceptSpecialInstructions()" id="btnAcceptInstructions" value="Accept Special Instructions">Accept Special Instructions</ion-button><br />
+        <h5 *ngIf="action.campaignSpecialInstructionsRead">Special Instructions Already Accepted</h5><br />
+
+        <span *ngIf="action.previousIRCode">Previous IR Code : {{action.previousIRCode.irCodeName}}</span><br />
+        <span *ngIf="action.previousIRCodeComment">Previous IR Code Comment: {{action.previousIRCodeComment}}</span><br />
+
+        <div style="border:1px solid white; padding:5px;" class="rounded" *ngIf="action.campaignSpecialInstructionsRead && !action.campaignIRCodeSelected && !action.isMerchandisingContract ">
+          <h5>Select an IR Code</h5>
+
+          <br />
+
+          <br />
+        </div>
+
+        <div style="border:1px solid white; padding:5px;" class="rounded" *ngIf="action.campaignIRCodeSelected && !action.isMerchandisingContract">
+          <h5>Current IR Code : {{action.selectedIRCode.irCodeName}}</h5>
+          <span>Current IR Code Comment :  {{action.IRCodeComment}} </span><br />
+          <input type="button" class="btn btn-primary btn-block" (click)="changeIRCode()" value="Change IR Code" />
+          <br />
+
+          <br />
+        </div>
+        <ion-item *ngIf="!action.selectedIRCode">
+          <ion-label>IR Code</ion-label>
+          <ionic-selectable [(ngModel)]="port"
+                            [items]="IRCodes"
+                            itemValueField="irCodeID"
+                            itemTextField="irCodeName"
+                            [canSearch]="true"
+                            (onChange)="portChange($event)">
+          </ionic-selectable>
+        </ion-item>
+
+        <div style="border:1px solid white; padding:5px;" class="rounded" *ngIf="action.campaignIRCodeSelected && !action.campaignFinished && action.needsIrCodeComment">
+          <h5>Comment</h5>
+          <div class="form-row">
+            <div class="form-group col-12">
+              <label>Installer Comment:</label>
+              <textarea type="text" class="form-control" [(ngModel)]="action.IRCodeComment" placeholder="{{action.IRCodeComment}}" (click)="clearIRCode()"></textarea>
+
+            </div>
+
+          </div>
+        </div>
+        <br />
+
+
+        <ion-button (click)="takePicture()" expand="block">
+          <ion-icon name="camera" slot="start"></ion-icon>
+          Capture image
+        </ion-button>
+
+        <ion-img *ngIf="myImage" [src]="myImage"></ion-img>
+      </ion-card-content>
+   
+  </ion-card>
+  </ion-content>

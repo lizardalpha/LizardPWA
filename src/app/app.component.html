@@ -1,4 +1,39 @@
 <ion-app>
-  <app-nav-bar></app-nav-bar>
-  <ion-router-outlet></ion-router-outlet>
-</ion-app>
+  <ion-header>
+    <ion-toolbar color="primary">
+      <ion-buttons slot="start">
+        <ion-menu-button color="dark"></ion-menu-button>
+      </ion-buttons>
+      <ion-title>
+        Phoenix
+      </ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <ion-menu side="end" menuId="first" contentId="content">
+    <ion-header>
+      <ion-toolbar color="success">
+        <ion-title>Menu</ion-title>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content color="light">
+      <ion-list>
+        <ion-menu-toggle auto-hide="true">
+          <ion-item>
+            <ion-icon slot="start"></ion-icon>
+            Logout
+          </ion-item>
+        </ion-menu-toggle>
+      </ion-list>
+      <!--<ion-list >
+        <ion-menu-toggle auto-hide="true">
+          <ion-item [routerLink]="pages.url" routerDirection="forward">
+            <ion-icon [name]="pages.icon" slot="start"></ion-icon>
+            {{pages.title}}
+          </ion-item>
+        </ion-menu-toggle>
+      </ion-list>-->
+    </ion-content>
+  </ion-menu>
+  <ion-router-outlet Id="content"></ion-router-outlet>
+</ion-app>   

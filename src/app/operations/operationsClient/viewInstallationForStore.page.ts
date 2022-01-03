@@ -28,6 +28,14 @@ export class OpsHomeClientStoresInstallationsComponent {
   public skipVisitVal: boolean = false;
   public filterActionText: string = '';
   public storeInstallationsFiltered: CampaignVisit[];
+
+
+
+  public storeInstallationsPending: CampaignVisit[];
+  public storeInstallationsCompleted: CampaignVisit[];
+  public storeInstallationsOutOfSynch: CampaignVisit[];
+
+
   imageActionIDs: any[];
   hasImagesToUpload: boolean = false;
   amountOfImagesToUpload: number = 0;
@@ -64,6 +72,10 @@ export class OpsHomeClientStoresInstallationsComponent {
   ngOnInit() {
     this.segment = 'pending';
     this.storeInstallationsFiltered = this.store.storeInstallations;
+
+    this.storeInstallationsPending = this.store.storeInstallations.filter(x => x.campaignFinished == false);
+    this.storeInstallationsCompleted = this.store.storeInstallations.filter(x => x.campaignFinished == true);
+
     if (!this.opsClientService.checkForSlowSpeed()) {
       this.getImagesToSync();
       //this.syncPhotos();
@@ -224,6 +236,9 @@ export class OpsHomeClientStoresInstallationsComponent {
 
     //  }
     //);
+  }
+
+  synchStore(store) {
   }
 
 

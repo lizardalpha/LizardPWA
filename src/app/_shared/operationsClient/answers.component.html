@@ -1,0 +1,37 @@
+<div class="row" style="margin-bottom:15px;">
+  <div class="col-sm-12">
+    <!--<select (ngModelChange)="setIRCodeForAction($event)" [ngModel]="SelectedIRCode" class="ircodes">
+    <optgroup>
+      <option *ngFor="let irCode of IRCodes" [ngValue]="irCode" class="col-sm-3 ircodes">
+        {{irCode.irCodeName}}
+      </option>
+    </optgroup>
+  </select>-->
+    <span>{{question.quetion}}</span>
+    <div *ngIf="!notSelected">
+      <span>You answered {{selectedAnswer.answer}}  to the above question.</span><br />
+      <span *ngIf="comment">You commented {{comment}}.</span><br />
+      <input type="button" class="btn btn-primary btn-block" (click)="resetAnswer()" value="Change Answer" />
+    </div>
+
+    <mat-form-field appearance="fill" *ngIf="notSelected">
+      <mat-label>Select an Answer</mat-label>
+
+      <mat-select (selectionChange)="setAnswer($event)">
+        <mat-option *ngFor="let answer of question.questionsAndAnswers" [value]="answer">
+
+          {{answer.answers.answer}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+    <div *ngIf="needsComment">
+      <form [formGroup]="actionForm">
+        <label>Installer Comment:</label>
+        <textarea type="text" formControlName="answerCommentControl" name="answerCommentControl" id="answerCommentControl" autofocus class="form-control" [(ngModel)]="answerComment" placeholder="{{answerComment}}" (click)="clearAnswerComment()" (ngModelChange)="commentChanges($event) " (blur)="sendCommentToAction()"></textarea>
+        <input type="button" class="btn btn-primary btn-block" (click)="setComment()" value="Submit Comment" />
+      </form>
+    </div>
+  </div>
+ 
+</div>
+

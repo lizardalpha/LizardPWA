@@ -1,0 +1,46 @@
+<div class="row" style="margin-bottom:15px;">
+  <div class="col-sm-3">
+    <div class="card-body text-white" style="min-width:250px;">
+      <!--<select (ngModelChange)="setIRCodeForAction($event)" [ngModel]="SelectedIRCode" class="ircodes">
+      <optgroup>
+        <option *ngFor="let irCode of IRCodes" [ngValue]="irCode" class="col-sm-3 ircodes">
+          {{irCode.irCodeName}}
+        </option>
+      </optgroup>
+    </select>-->
+
+      <mat-form-field appearance="fill" *ngIf="!selectedIRCode">
+        <mat-label>Ir Codes:</mat-label>
+        <mat-select (selectionChange)="setIRCodeForAction($event)">
+          <mat-option *ngFor="let irCode of IRCodes" [value]="irCode">
+            {{irCode.irCodeName}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+    <form [formGroup]="irCodeForm">
+      <div style="border:1px solid white; padding:5px;" class="rounded" *ngIf="selectedIRCode">
+        <h5>Current IR Code : {{selectedIRCode.irCodeName}}</h5>
+        <div style="border:1px solid white; padding:5px;" class="rounded" *ngIf="selectedIRCode.hasComment">
+          <h5>Comment</h5>
+          <div class="form-row">
+            <div class="form-group col-12">
+              <label>Installer Comment:</label>
+              <textarea type="text" formControlName="IRCodeComment" rows="5" class="form-control" [(ngModel)]="irCodeComment" placeholder="{{selectedIRCode.IRCodeComment}}" (click)="clearIRCode()"></textarea>
+
+            </div>
+
+          </div>
+
+
+
+        </div>
+        <input type="button" class="btn btn-primary btn-block" (click)="changeIRCode()" value="Change IR Code" />
+        <input type="button" class="btn btn-success btn-block" (click)="saveIRCodes()" value="Complete Store Visit Skip" />
+      </div>
+      </form>
+  </div>
+    <br />
+
+  </div>
+

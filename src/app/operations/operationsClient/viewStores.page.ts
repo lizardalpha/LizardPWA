@@ -124,5 +124,6 @@ export class OpsHomeClientStoresComponent implements OnInit {
 
   }
 
-
+  syncStore(store) {
+  }
 }

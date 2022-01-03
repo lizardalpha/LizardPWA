@@ -144,6 +144,7 @@ ion-card {
   /* min-width : 350px;*/
   background-color: var(--primary-color-light);
   color: var(--text-color-light) !important;
+  max-width:300px;
 }
 
 .card .homescreen {
@@ -186,4 +187,10 @@ ion-card {
 
 .example-radio-button {
   margin: 5px;
+}
+ion-router-outlet{
+    margin-top:60px;
+}
+ion-scroll {
+  height: 100px;
 }
