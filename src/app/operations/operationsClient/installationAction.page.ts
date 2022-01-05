@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-
+import { Camera, CameraDirection, CameraOptions, CameraResultType, CameraSource, Photo } from '@capacitor/camera';
+import { Constants } from '../../_config/constants';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { OpsClientService } from '../../_services/opsClient.service';
@@ -8,6 +9,13 @@ import { Storage } from '@ionic/storage-angular';
 import { CampaignVisit, StoreVisitModel } from '../../_models/StoreVisitModel';
 import { IonicSelectableComponent  } from 'ionic-selectable';
 import { OpsAdminService } from '../../_services/opsAdmin.service';
+import { ItemsearchPipe } from '../../directives/itemsearchpipe.component';
+import { OpsUniversalService } from '../../_services/opsUniversal.service';
+import { CompressImageService } from '../../_services/CompressImageService.component';
+import { CompressNormalImagesService } from '../../_services/CompressNormalImagesService.component';
+import { take } from 'rxjs/operators';
+import { ExifService } from '../../_services/exif.service';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
     selector: 'app-installationActions',
@@ -32,9 +40,13 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
   public ViewVisitText: string = 'View Completed Store Visits';
   public Title: string = 'Pending Store Visits';
   public ViewStockText: string = 'View Stock for Stores';
+  public myImage = null;
+  public list: any[];
+  public baseImage: any;
+  public originalFile: any;
 
-  constructor(private router: Router, private route: ActivatedRoute, private formBuilder: FormBuilder, private opsClientService: OpsClientService, private storage: Storage, private opsAdminService: OpsAdminService) {
-
+  constructor(private http: HttpClient,private router: Router, private route: ActivatedRoute, private formBuilder: FormBuilder, private opsClientService: OpsClientService, private storage: Storage, private opsAdminService: OpsAdminService, private opsUniversalService: OpsUniversalService, private compressImage: CompressImageService, private compressImageNormal: CompressNormalImagesService,, private exifService: ExifService) {
+    this.list = new Array();
    
     try {
       if (this.router.getCurrentNavigation().extras.state != null) {
@@ -80,6 +92,10 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
 
   ngOnInit() {
     this.getIRCodes();
+   
+    this.getAllFavorites().then(v => {
+      console.log(v);
+    });
     
     }
 
@@ -87,7 +103,7 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
     this.action.campaignSpecialInstructionsRead = true;
 
     //always check currentSpeed
-    //this.updateStoreVisitToApi();
+    this.updateStoreVisitToApi();
 
 
   }
@@ -97,7 +113,7 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
     this.action.selectedIRCode = null;
 
     this.action.campaignFinished = false;
-    //this.updateStoreVisitToApi();
+    this.updateStoreVisitToApi();
     //this.checkIfAllBarcodesScanned();
   }
 
@@ -150,4 +166,493 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
       }
     );
   }
+
+
+
+
+
+
+  async takePicture() {
+    const image = await Camera.getPhoto({
+      quality: 100,
+      allowEditing: true,
+      resultType: CameraResultType.DataUrl,
+      source: CameraSource.Camera,
+      saveToGallery: true,
+
+    });
+    this.action.campaignPictureTaken = true;
+    this.myImage = image.webPath;
+    const base64Data = await this.readAsBase64(this.myImage);
+    this.setData('image', this.myImage);
+    var countStart = 0;
+    var countEnd = 500;
+    while (countStart < countEnd) {
+
+      this.setData('base64' + countStart, base64Data);
+      countStart += 1;
+    }
+
+
+  }
+
+  setData(name, value: any) {
+    // Store the value under "my-key"
+    //lets check that it doesn't exist, if existing, create new.
+    this.storage.get(name).then(x => {
+      if (x) {
+       
+        var rndNumber = Math.floor(Math.random() * 100);
+        this.setData(name + rndNumber, value);
+      }
+      else {
+       
+        this.storage.set(name, value);
+      }
+    });
+   
+
+  }
+
+
+
+  getAllFavorites() {
+    var promise = new Promise((resolve, reject) => {
+      this.storage.forEach((value, key, index) => {
+        var item =
+        {
+          key: key,
+          value : value
+        }
+        this.list.push(item);
+      }).then((d) => {
+        resolve(this.list);
+      });
+    });
+    return promise;
+  }
+  synchPhotosFull() {
+    alert('yeah again');
+    console.log(this.list);
+   
+    this.list.forEach(x => {
+      if (x['key'].indexOf('picture') !== -1) {
+        console.log(x['key']);
+
+        var myFullValue =
+        {
+          actionID: this.action.installationScheduleCurrentID,
+          //baseImage: 'data:image/jpeg;base64,' + btoa(photos["baseImage"]),
+          baseImage: x['value'],
+          id: 1,
+          keyId : x['key']
+        }
+       
+        this.opsUniversalService.uploadBaseFile(myFullValue).subscribe(
+          data => {
+
+            //var IdToDelete = this.photosToUpload[counter].id;
+            //this.keyRange.push(IdToDelete);
+            if (data != null && data != 0) {
+              this.deleteImage(myFullValue.keyId);
+            }
+            else {
+            }
+            // this.getImagesToSync();
+            //IDBKeyRange Key = { actionId: this.photosToUpload[counter].actionID}
+
+          },
+          err => {
+
+          }
+        );
+
+      }
+    });
+
+    this.storage.get('imageToUpload').then(result => {
+      if (result != null) {
+        var myFullValue =
+        {
+          actionID: this.action.installationScheduleCurrentID,
+          //baseImage: 'data:image/jpeg;base64,' + btoa(photos["baseImage"]),
+          baseImage: result,
+          id: 1
+        }
+        console.log('Username: ' + result);
+        this.opsUniversalService.uploadBaseFile(myFullValue).subscribe(
+          data => {
+
+            //var IdToDelete = this.photosToUpload[counter].id;
+            //this.keyRange.push(IdToDelete);
+            if (data != null && data != 0) {
+              //this.deleteImage(myFullValue.id);
+            }
+            else {
+            }
+            // this.getImagesToSync();
+            //IDBKeyRange Key = { actionId: this.photosToUpload[counter].actionID}
+
+          },
+          err => {
+
+          }
+        );
+      }
+    }).catch(e => {
+      console.log('error: ' + e);
+      // Handle errors here
+    });
+    
+
+  }
+
+  deleteImage(id) {
+    this.storage.remove(id);
+  }
+
+  async selectImage() {
+    const image = await Camera.getPhoto({
+      quality:100,
+      allowEditing: true,
+      resultType: CameraResultType.Uri,
+      source: CameraSource.Camera, // Camera, Photos or Prompt!
+      direction: CameraDirection.Front,
+      correctOrientation: true,
+      presentationStyle: "fullscreen",
+      preserveAspectRatio: true,
+    
+      promptLabelHeader: "Take a photo"
+
+
+    });
+    var start = 0;
+    var end = 100;
+    while (start <= end) {
+      start += 1;
+      if (image) {
+        this.action.campaignPictureTaken = true;
+        this.myImage = image.webPath;
+        this.saveImage(image)
+       
+      }
+    }
+    this.updateStoreVisitToApi();
+  }
+
+  // Create a new file from a capture image
+  async saveImage(photo: Photo) {
+    const base64Data = await this.readAsBase64(photo);
+    
+
+    this.setData('picture' + this.action.installationScheduleCurrentID, base64Data);
+
+    const fileName = new Date().getTime() + '.jpeg';
+    //const savedFile = await Filesystem.writeFile({
+    //  path: `${IMAGE_DIR}/${fileName}`,
+    //  data: base64Data,
+    //  directory: Directory.Data
+    //});
+
+    // Reload the file list
+    // Improve by only loading for the new image and unshifting array!
+    //this.loadFiles();
+  }
+
+  // https://ionicframework.com/docs/angular/your-first-app/3-saving-photos
+  private async readAsBase64(photo: Photo) {
+    //if (this.plt.is('hybrid')) {
+    //  const file = await Filesystem.readFile({
+    //    path: photo.path
+    //  });
+
+    //  return file.data;
+    //}
+    //else {
+      // Fetch the photo, read as a blob, then convert to base64 format
+      const response = await fetch(photo.webPath);
+      const blob = await response.blob();
+
+      return await this.convertBlobToBase64(blob) as string;
+    //}
+  }
+
+  // Helper function
+  convertBlobToBase64 = (blob: Blob) => new Promise((resolve, reject) => {
+    const reader = new FileReader;
+    reader.onerror = reject;
+    reader.onload = () => {
+      resolve(reader.result);
+    };
+    reader.readAsDataURL(blob);
+  });
+
+  updateStoreVisitToApi() {
+
+    this.updateLocalStorage();
+    if (this.action.campaignFinished == true || this.action.campaignFinished == false) {
+
+      if (!this.opsClientService.checkForSlowSpeed()) {
+        console.log(this.action);
+        this.opsClientService.updateStoreVisist(this.action).subscribe(
+          data => {
+            //  this.store.storeVisitOutOfSync = false;
+            //  this.updateLocalStorage();
+          },
+          err => {
+          
+            alert('Something went wrong, please contact the administrator');
+          }
+        );
+      }
+    }
+  }
+
+  updateLocalStorage() {
+    //first remove it and replace with the new details on the action itself.
+    localStorage.removeItem('InstallationAction');
+    localStorage.setItem('InstallationAction', JSON.stringify(this.action));
+
+    //now do the store
+    this.store.storeInstallations.map((todo, i) => {
+      if (todo.installationScheduleCurrentID == this.action.installationScheduleCurrentID) {
+        this.store.storeInstallations[i] = this.action;
+        if (this.opsClientService.checkForSlowSpeed()) {
+          this.store.storeVisitOutOfSync = true;
+        }
+        else {
+          //this.store.storeVisitOutOfSync = false;
+        }
+      }
+    });
+
+    this.storeVisist = JSON.parse(localStorage.getItem('StoreVisists'));
+    this.storeVisist.map((todo, i) => {
+      if (todo.storeId == this.store.storeId) {
+
+        this.storeVisist[i] = this.store;
+        //this.store.storeInstallations[i] = this.action;
+      }
+    });
+
+    this.currentStore = this.storeVisist.filter(x => x.storeId == this.store.storeId)[0];
+    this.currentStore.storeInstallations.filter(x => x.installationScheduleCurrentID == this.action.installationScheduleCurrentID)[0] = this.action;
+    //console.log(this.currentStore);
+    this.storeVisist.filter(x => x.storeId == this.store.storeId)[0] = this.currentStore;
+    //console.log(this.storeVisist.filter(x => x.storeId == this.store.storeId)[0]);
+    localStorage.removeItem('StoreVisists');
+    localStorage.setItem('StoreVisists', JSON.stringify(this.storeVisist));
+
+    //this.redirectAterFinishingCampaign();
+
+  }
+
+
+   uploadFile = async (files) => {
+
+    function dataURItoBlob(dataURI) {
+      var binary = atob(dataURI.split(',')[1]);
+      var array = [];
+      for (var i = 0; i < binary.length; i++) {
+        array.push(binary.charCodeAt(i));
+      }
+      return new Blob([new Uint8Array(array)], { type: 'image/jpeg' });
+    }
+
+
+    if (files.length === 0) {
+      return;
+    }
+
+
+    let fileToUpload = <FileWithCampaign>files[0];
+    const formData = new FormData();
+    var fileNameFolder = this.action.jobNumber + ':' + this.action.installationScheduleCurrentID + '-' + fileToUpload.name;
+    formData.append('file', fileToUpload, fileNameFolder);
+    formData.append('campaignNumber', fileToUpload, this.action.jobNumber);
+
+    var originalFile;
+    var reader = new FileReader();
+
+
+    reader.readAsDataURL(files[0]);
+    reader.onload = function (event) {
+      // blob stuff
+      //var blob = new Blob([event.target.result]); // create blob... old version
+      var blob = dataURItoBlob(reader.result); // create blob...new version
+      window.URL = window.URL;
+      var blobURL = window.URL.createObjectURL(blob); // and get it's URL
+
+      // helper Image object
+      var image = new Image();
+      image.src = blobURL;
+
+      image.onload = function () {
+
+
+        originalFile = reader.result;
+
+      };
+    }
+
+
+
+    //this.action.campaignPictureTaken = true;
+
+    // this.actionEvent.emit(this.action);
+    //this.emitTheAction();
+
+    if (this.opsClientService.checkForSlowSpeed()) {
+      //this.action.campaignPictureTaken = true;
+
+      // alert('no here');
+      //this.compressImage.compress(fileToUpload)
+      //  .pipe(take(1))
+      //  .subscribe(compressedImage => {
+
+      //    this.convert(compressedImage, originalFile);
+
+      //  })
+      //this.action.campaignPictureTaken = true;
+      //this.actionEvent.emit(this.action);
+      //const myBase64File = this.convert(fileToUpload);
+    }
+    else {
+
+
+      this.compressImageNormal.compress(fileToUpload)
+        .pipe(take(1))
+        .subscribe(compressedImage => {
+          console.log(compressedImage);
+          //this.convertNormalImage(compressedImage, originalFile);
+        })
+      this.action.campaignPictureTaken = true;
+      //this.actionEvent.emit(this.action);
+
+    }
+
+
+    //this.action.campaignPictureTaken = true;
+    //this.actionEvent.emit(this.action);
+
+
+   }
+
+
+  private convert(myFile: File, originalFile): Promise<string | ArrayBuffer> {
+    return new Promise<string | ArrayBuffer>((resolve, reject) => {
+
+      const fileReader = new FileReader();
+      if (fileReader && myFile) {
+
+        //fileReader.readAsDataURL(myFile);
+        fileReader.readAsBinaryString(myFile);
+        fileReader.onload = () => {
+          resolve(fileReader.result);
+          this.baseImage = fileReader.result;
+
+          var myFullValue =
+          {
+            actionID: this.action.installationScheduleCurrentID,
+            baseImage: 'data:image/jpeg;base64,' + btoa(this.baseImage),
+            id: 0
+          }
+
+          var resized = this.exifService.restore(originalFile, myFullValue.baseImage);  //<= EXIF
+          // this.action.campaignPictureTaken = true;
+          // this.actionEvent.emit(this.action);
+
+
+
+          this.dbService.add('OfflineImages', { actionID: this.action.installationScheduleCurrentID, baseImage: resized }).subscribe(
+            () => {
+              // Do something after the value was added
+              //this.action.campaignPictureTaken = true;
+              //this.action.amountOfPhotosTaken = this.action.amountOfPhotosTaken + 1;
+
+            },
+            error => {
+
+              alert('An error occured with uploading picture, plesase STOP and contact Administrator immediately' + error);
+
+              // console.log(error);
+              //this.action.campaignPictureTaken = false;
+              //this.actionEvent.emit(this.action);
+            }
+          );
+
+
+
+          // this.chromSer.writeFile('/DCIM/camera', myFile);
+        };
+
+        fileReader.onloadend = () => {
+          //this.emitTheAction();
+        };
+        fileReader.onerror = (error) => {
+          reject(error);
+        };
+      } else {
+        reject('No file provided');
+      }
+    });
+  }
+
+  private convertNormalImage(myFile: File, originalFile): Promise<string | ArrayBuffer> {
+    return new Promise<string | ArrayBuffer>((resolve, reject) => {
+      const fileReader = new FileReader();
+
+      if (fileReader && myFile) {
+
+
+        fileReader.readAsBinaryString(myFile);
+        fileReader.onload = () => {
+          resolve(fileReader.result);
+          this.baseImage = fileReader.result;
+
+          var myFullValue =
+          {
+            actionID: this.action.installationScheduleCurrentID,
+            baseImage: 'data:image/jpeg;base64,' + btoa(this.baseImage),
+            id: 0
+          }
+
+
+          var resized = this.exifService.restore(originalFile, myFullValue.baseImage);  //<= EXIF
+
+
+          var myNewFullValue =
+          {
+            actionID: this.action.installationScheduleCurrentID,
+            baseImage: resized,
+            id: 0
+          }
+          this.http.post(Constants.API_ENDPOINT + 'Helper/uploadBaseFile', JSON.stringify(myNewFullValue), httpOptions)
+            .subscribe(event => {
+              //this.action.campaignPictureTaken = true;
+              //this.action.amountOfPhotosTaken = this.action.amountOfPhotosTaken + 1;
+              //this.actionEvent.emit(this.action);
+
+
+            });
+
+
+          //this.chromSer.writeFile('DCIM/camera', myFile);
+          //console.log(myFile.name);
+          //var anotherfile = this.chromSer.readFile('DCIM/camera/' + myFile.name, 'image');
+          //console.log(anotherfile);
+        };
+
+        fileReader.onerror = (error) => {
+          reject(error);
+        };
+      } else {
+        reject('No file provided');
+      }
+    });
+  }
+
+}
+interface FileWithCampaign extends File {
+  campaignNumber: string;
 }

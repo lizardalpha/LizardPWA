@@ -14,7 +14,7 @@ export class Constants {
     //public static API_AUTH_ENDPOINT = "http://192.168.0.56:1554/";
     //public static API_ENDPOINT = "http://192.168.0.56:1554/api/";
 
-   public static API_AUTH_ENDPOINT = "https://pcaimages.primeinstore.co.za/";
+  public static API_AUTH_ENDPOINT = "https://pcaimages.primeinstore.co.za/";
    public static API_ENDPOINT = "https://pcaimages.primeinstore.co.za/api/";
 
     //public static API_AUTH_ENDPOINT = "https://localhost:44334/";

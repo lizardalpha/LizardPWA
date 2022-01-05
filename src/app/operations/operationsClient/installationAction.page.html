@@ -9,6 +9,7 @@
         <ion-card-subtitle>{{action.qtyToInstall}} x {{action.mediaType}} - {{action.product}}</ion-card-subtitle>
       </ion-card-header>
       <ion-card-content scrollY="true">
+        <ion-button (click)="synchPhotosFull()">{{list.length}} photos to synch</ion-button><br />
         <span>{{action.client}}</span><br />
 
         <h5>Special Instructions</h5>
@@ -59,13 +60,30 @@
         </div>
         <br />
 
+        <div *ngIf="!action.campaignPictureTaken && action.campaignSpecialInstructionsRead && action.campaignIRCodeSelected && action.selectedIRCode.needsPicture && !action.isMerchandisingContract">
+          <ion-button (click)="selectImage()" expand="block">
+            <ion-icon name="camera" slot="start"></ion-icon>
+            Take a Picture
+          </ion-button>
 
-        <ion-button (click)="takePicture()" expand="block">
-          <ion-icon name="camera" slot="start"></ion-icon>
-          Capture image
-        </ion-button>
+          <ion-img *ngIf="myImage" [src]="myImage"></ion-img>
+        </div>
 
-        <ion-img *ngIf="myImage" [src]="myImage"></ion-img>
+        <div style="border:1px solid white; padding:5px;" class="rounded" *ngIf="action.campaignSpecialInstructionsRead  && action.campaignPictureTaken && !action.isMerchandisingContract">
+          <h5>Photo Already Captured</h5>
+          <ion-button (click)="selectImage()" expand="block">
+            <ion-icon name="camera" slot="start"></ion-icon>
+            Edit Photo
+          </ion-button>
+
+        </div>
+
+        <div class="col-md-12">
+          <input type="file" #file placeholder="Choose file" (change)="uploadFile(file.files)" accept="image/*" capture="camera">
+          <button style="width:100%" type="button" class="btn btn-success" (click)="file.click()">Take Photo With Slow Speed</button>
+          <img src="baseImage" />
+        </div>
+
       </ion-card-content>
    
   </ion-card>
