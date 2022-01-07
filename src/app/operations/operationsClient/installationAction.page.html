@@ -9,7 +9,7 @@
         <ion-card-subtitle>{{action.qtyToInstall}} x {{action.mediaType}} - {{action.product}}</ion-card-subtitle>
       </ion-card-header>
       <ion-card-content scrollY="true">
-        <ion-button (click)="synchPhotosFull()">{{list.length}} photos to synch</ion-button><br />
+
         <span>{{action.client}}</span><br />
 
         <h5>Special Instructions</h5>
@@ -36,7 +36,7 @@
 
           <br />
         </div>
-        <ion-item *ngIf="!action.selectedIRCode">
+        <ion-item *ngIf="action.campaignSpecialInstructionsRead && !action.campaignIRCodeSelected && !action.isMerchandisingContract ">
           <ion-label>IR Code</ion-label>
           <ionic-selectable [(ngModel)]="port"
                             [items]="IRCodes"
@@ -60,30 +60,114 @@
         </div>
         <br />
 
-        <div *ngIf="!action.campaignPictureTaken && action.campaignSpecialInstructionsRead && action.campaignIRCodeSelected && action.selectedIRCode.needsPicture && !action.isMerchandisingContract">
-          <ion-button (click)="selectImage()" expand="block">
-            <ion-icon name="camera" slot="start"></ion-icon>
-            Take a Picture
-          </ion-button>
+        <div style="border:1px solid white; padding:5px;" class="rounded" *ngIf="!action.campaignFinished && hasCapexItem && action.campaignIRCodeSelected && action.selectedIRCode.forceCapexScan ">
+          <button class="btn btn-danger btn-block" (click)="removeBarcodeShow()" *ngIf="!removingBarcodes">Remove Capex Item</button><br />
+          <div *ngIf="removingBarcodes">
+            <h5>Scan Barcode(s) to Remove :</h5>
+            <div class="form-row">
+              <div class="form-group col-12">
+                <label>Scan the barcode to Remove :</label>
+                <input type="text" class="form-control" placeholder="Scan barcode:" (keyup.enter)="scanBarcodeToRemove($event)" />
+                <div>
+                  <div *ngFor="let barcode of action.barcodesToRemove" class="btn btn-primary">
+                    {{barcode.barcode}}<i class="fa fa-times-circle fa-lg" (click)="removeBarcodeFromBarcodesToRemove(barcode)"></i>
+                  </div>
 
-          <ion-img *ngIf="myImage" [src]="myImage"></ion-img>
+
+                </div>
+              </div>
+            </div>
+          </div>
+          <br />
         </div>
 
-        <div style="border:1px solid white; padding:5px;" class="rounded" *ngIf="action.campaignSpecialInstructionsRead  && action.campaignPictureTaken && !action.isMerchandisingContract">
-          <h5>Photo Already Captured</h5>
-          <ion-button (click)="selectImage()" expand="block">
-            <ion-icon name="camera" slot="start"></ion-icon>
-            Edit Photo
-          </ion-button>
+        <div style="border:1px solid white; padding:5px;" class="rounded" *ngIf="!action.campaignFinished && hasCapexItem &&  action.campaignIRCodeSelected && action.selectedIRCode.forceCapexScan ">
+          <!--we need to scan all barcodes here-->
+
+
+          <h5>Choose amount to install : </h5>
+          <label id="example-radio-group-label">Choose how many to install</label>
+
+          <ion-list>
+            <ion-radio-group value="biff">
+              <ion-list-header>
+                <ion-label>Name</ion-label>
+              </ion-list-header>
+
+              <ion-item *ngFor="let amount of amountOfInstallations" (click)="setAmountToInstall(amount + 1)">
+                <ion-label> {{amount + 1}}</ion-label>
+                <ion-radio slot="start" value="amount + 1"></ion-radio>
+              </ion-item>
+
+             
+            </ion-radio-group>
+          </ion-list>
+
+          <h5>Scan Barcode :</h5>
+          <div *ngFor="let barcodeScanning of action.masterItemWithBarcodes" class="form-row">
+            <div class="form-group col-12">
+              <label>Scan {{barcodeScanning.masterItemName}} x {{barcodeScanning.amountRequired * amountChosenToInstall}} Barcode :</label>
+              <input *ngIf="barcodeScanning.scannedBarcodes.length   != (barcodeScanning.amountRequired * amountChosenToInstall)" type="text" class="form-control" placeholder="Scan barcode:" (keyup.enter)="updateBarcodeScanned($event,barcodeScanning.barcodes,barcodeScanning.masterItemId,'masteritem')" />
+              <div>
+                <div *ngFor="let barcode of barcodeScanning.scannedBarcodes" class="btn btn-primary">
+                  {{barcode.barcode}}<i class="fa fa-times-circle fa-lg" (click)="removeBarcodeFromScanned(barcode,barcodeScanning.masterItemId,'masteritem')"></i>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <div *ngFor="let barcodeScanning of action.masterItemGroupWithBarcodes" class="form-row">
+            <div class="form-group col-12">
+              <label>Scan {{barcodeScanning.masterItemGroupName}} x {{barcodeScanning.amountRequired * amountChosenToInstall}} Barcode :</label>
+              <input *ngIf="barcodeScanning.scannedBarcodes.length   != (barcodeScanning.amountRequired * amountChosenToInstall)" type="text" class="form-control" placeholder="Scan barcode:" (keyup.enter)="updateBarcodeScanned($event,barcodeScanning.barcodes,barcodeScanning.masterItemGroupId,'group')" />
+              <div>
+                <div *ngFor="let barcode of barcodeScanning.scannedBarcodes" class="btn btn-primary">
+                  {{barcode.barcode}}<i class="fa fa-times-circle fa-lg" (click)="removeBarcodeFromScanned(barcode,barcodeScanning.masterItemGroupId,'group')"></i>
+                </div>
+
+              </div>
+            </div>
+          </div>
+          <br />
+        </div>
+        <div *ngIf="action.isMerchandisingContract">
+          <h5>Questions</h5>
+          <div *ngFor="let question of action.media.questions" style="border:1px solid white; padding:5px;" class="rounded">
+
+            <!--<span>{{question.quetion}}</span>-->
+            <app-opsclient-answer class="col-sm-3" [action]="action" [selectedAnswers]="action.installationScheduleQuestionsAndAnswers" [question]="question" (actionEvent)="getAnswerBack($event)"></app-opsclient-answer>
+            <!--<div *ngFor="let answer of question.questionsAndAnswers">
+        {{answer.answers.answer}}
+
+      </div>-->
+          </div>
+        </div>
+
+        <div class="col-md-12" *ngIf="!action.campaignPictureTaken && action.campaignSpecialInstructionsRead && action.campaignIRCodeSelected && action.selectedIRCode.needsPicture && !action.isMerchandisingContract">
+          <input type="file" #file placeholder="Choose file" (change)="uploadFile(file.files)" accept="image/*" style="display:none" capture="camera">
+          <button style="width:100%" type="button" class="btn btn-success" (click)="file.click()">Take Photo</button>
 
         </div>
 
-        <div class="col-md-12">
-          <input type="file" #file placeholder="Choose file" (change)="uploadFile(file.files)" accept="image/*" capture="camera">
-          <button style="width:100%" type="button" class="btn btn-success" (click)="file.click()">Take Photo With Slow Speed</button>
-          <img src="baseImage" />
+        <div class="col-md-12" *ngIf="action.campaignPictureTaken && action.campaignSpecialInstructionsRead && action.campaignIRCodeSelected && action.selectedIRCode.needsPicture && !action.isMerchandisingContract">
+          <input type="file" #file placeholder="Choose file" (change)="uploadFile(file.files)" accept="image/*" style="display:none" capture="camera">
+          <button style="width:100%" type="button" class="btn btn-success" (click)="file.click()">Edit Photo</button>
+
+        </div>
+        <div class="card-footer" *ngIf="action.campaignIRCodeSelected && !action.isMerchandisingContract && !action.campaignFinished && (!action.needsIrCodeComment || action.IRCodeComment != '') && (action.campaignPictureTaken || !action.selectedIRCode.needsPicture) && (scannedCapexItem || !action.forceCapexScan)">
+          <!--Now we can finish the campaign-->
+          <input type="button" class="btn btn-primary btn-block" (click)="finishCampaign()" style="z-index:100" value="Finish Campaign" />
         </div>
 
+        <div class="card-footer" *ngIf="action.isMerchandisingContract && action.campaignPictureTaken && action.allMerchandisingQuestionsAnswered && !action.campaignFinished">
+          <!--Now we can finish the campaign-->
+          <input type="button" class="btn btn-primary btn-block" (click)="finishCampaign()" value="Finish Merchandising Campaign" />
+        </div>
+        <div class="card-footer" *ngIf="action.campaignFinished">
+          <!--Now we can finish the campaign-->
+          <input type="button" class="btn btn-primary btn-block" (click)="openCampaign()" value="Open Campaign" />
+        </div>
       </ion-card-content>
    
   </ion-card>

@@ -1,53 +1,25 @@
-<ion-header>
-  <ion-toolbar color="primary">
-    <ion-title>
-      Capacitor PWA
-    </ion-title>
-  </ion-toolbar>
-</ion-header>
-
 <ion-content>
   <ion-card [routerLink]="['/Operations']">
     <ion-card-header>
-      <ion-card-subtitle>Card Subtitle</ion-card-subtitle>
+
       <ion-card-title>Store Visists</ion-card-title>
     </ion-card-header>
 
     <ion-card-content>
       <img src="/assets/images/ops/opsMain.jpg" class="card-img-top" alt="...">
-    Over here you can find the stores you need to visit.
+      Over here you can find the stores you need to visit.
     </ion-card-content>
   </ion-card>
 
- 
-  <ion-button (click)="takePicture()" expand="block">
-    <ion-icon name="camera" slot="start"></ion-icon>
-    Capture image
-  </ion-button>
+  <ion-card *ngIf="hasPhotosToSynch">
+    <ion-card-header>
 
-  <ion-img *ngIf="myImage" [src]="myImage"></ion-img>
+      <ion-card-title>Synch Photos</ion-card-title>
+    </ion-card-header>
 
-  <ion-button (click)="getCurrentPosition()" expand="block">
-    <ion-icon name="locate" slot="start"></ion-icon>
-    Get position
-  </ion-button>
-
-  <!-- present the geolocation information -->
-  <ion-card *ngIf="position">
     <ion-card-content>
-      <ion-item>
-        <ion-icon name="location" slot="start"></ion-icon>
-        Lat: {{ position.coords.latitude }}
-      </ion-item>
-      <ion-item>
-        <ion-icon name="location" slot="start"></ion-icon>
-        Lng: {{ position.coords.longitude }}
-      </ion-item>
-
-      <ion-button (click)="share()" expand="block" color="secondary">
-        <ion-icon name="share" slot="start"></ion-icon>
-        Share!
-      </ion-button>
+      <img src="/assets/images/ops/SyncImages.png" class="card-img-top" alt="...">
+      <ion-button  class="danger" (click)="synchPhotosFull()">{{list.length}} photos to synch</ion-button><br />
     </ion-card-content>
   </ion-card>
 </ion-content>

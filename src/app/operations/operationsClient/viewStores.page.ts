@@ -31,13 +31,13 @@ export class OpsHomeClientStoresComponent implements OnInit {
   ngOnInit() {
 
     if (!this.currentSpeedSlow) {
-      this.getStoreVisists();
+      this.getStoreVisists('');
     }
     else {
       this.loadToken('StoreVisists',(result?: any) => {
       // here your result
          if (this.storeVisist == null) {
-           this.getStoreVisists();
+           this.getStoreVisists('');
          }
       console.log(result);
     });
@@ -45,7 +45,7 @@ export class OpsHomeClientStoresComponent implements OnInit {
     }
 
 
-  getStoreVisists() {
+  getStoreVisists(showMessage) {
 
     this.opsClientService.getStoreVisistsNew().subscribe(
       data => {
@@ -53,7 +53,9 @@ export class OpsHomeClientStoresComponent implements OnInit {
         this.storeVisist = data;
         if (this.storeVisist != null) {
           this.storage.set('StoreVisists', data);
-          
+          if (showMessage) {
+            alert('it has refreshed your store list');
+          }
         }
         else {
           this.loadToken('StoreVisists', (result?: any) => {
@@ -92,6 +94,7 @@ export class OpsHomeClientStoresComponent implements OnInit {
   }
 
   refreshStoreList() {
+    this.getStoreVisists('It has refreshed your store visists');
   }
   viewStockForStores() {
   }

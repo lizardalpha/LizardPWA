@@ -15,22 +15,20 @@ export class HomePage {
   position: Position = null;
   photosValues: any[];
   list: any[];
+  hasPhotosToSynch: boolean = false;
 
   constructor(private storage: Storage) {
     this.list = new Array();
-
-    this.getAllFavorites().then(v => {
-      console.log(v);
-    });
-   
-    this.loadToken((result?: any) => {
-      // here your result
-
-      console.log(result);
-    });
   }
 
+  ngOnInit() {
+    
 
+    this.getAllFavorites().then(v => {
+     
+    });
+
+  }
 
 
   async takePicture() {
@@ -120,11 +118,97 @@ export class HomePage {
   getAllFavorites() {
     var promise = new Promise((resolve, reject) => {
       this.storage.forEach((value, key, index) => {
-        this.list.push(value);
+        if (key.indexOf('picture') !== -1) {
+          var item =
+          {
+            key: key,
+            value: value
+          }
+          this.list.push(item);
+          this.hasPhotosToSynch = true;
+        }
+       
       }).then((d) => {
         resolve(this.list);
       });
     });
     return promise;
+  }
+
+
+  synchPhotosFull() {
+   
+    console.log(this.list);
+
+    this.list.forEach(x => {
+      if (x['key'].indexOf('picture') !== -1) {
+        console.log(x['key']);
+
+        //var myFullValue =
+        //{
+        //  actionID: this.action.installationScheduleCurrentID,
+        //  //baseImage: 'data:image/jpeg;base64,' + btoa(photos["baseImage"]),
+        //  baseImage: x['value'],
+        //  id: 1,
+        //  keyId: x['key']
+        //}
+
+        //this.opsUniversalService.uploadBaseFile(myFullValue).subscribe(
+        //  data => {
+
+        //    //var IdToDelete = this.photosToUpload[counter].id;
+        //    //this.keyRange.push(IdToDelete);
+        //    if (data != null && data != 0) {
+        //      this.deleteImage(myFullValue.keyId);
+        //    }
+        //    else {
+        //    }
+        //    // this.getImagesToSync();
+        //    //IDBKeyRange Key = { actionId: this.photosToUpload[counter].actionID}
+
+        //  },
+        //  err => {
+
+        //  }
+        //);
+
+      }
+    });
+
+    //this.storage.get('imageToUpload').then(result => {
+    //  if (result != null) {
+    //    var myFullValue =
+    //    {
+    //      actionID: this.action.installationScheduleCurrentID,
+    //      //baseImage: 'data:image/jpeg;base64,' + btoa(photos["baseImage"]),
+    //      baseImage: result,
+    //      id: 1
+    //    }
+     
+    //    this.opsUniversalService.uploadBaseFile(myFullValue).subscribe(
+    //      data => {
+
+    //        //var IdToDelete = this.photosToUpload[counter].id;
+    //        //this.keyRange.push(IdToDelete);
+    //        if (data != null && data != 0) {
+    //          //this.deleteImage(myFullValue.id);
+    //        }
+    //        else {
+    //        }
+    //        // this.getImagesToSync();
+    //        //IDBKeyRange Key = { actionId: this.photosToUpload[counter].actionID}
+
+    //      },
+    //      err => {
+
+    //      }
+    //    );
+    //  }
+    //}).catch(e => {
+    //  console.log('error: ' + e);
+    //  // Handle errors here
+    //});
+
+
   }
 }

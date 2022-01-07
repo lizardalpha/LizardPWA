@@ -35,6 +35,7 @@
   --table-background-color: #0d1838;
   --table-grey-color: #d3d3d3;
   --table-grey-color-darker: #acacac;
+  --header-color: #0d1838;
 }
 
 body {
@@ -193,4 +194,13 @@ ion-router-outlet{
 }
 ion-scroll {
   height: 100px;
+}
+ion-card-title
+{
+    color:white;
+    font-size:16px;
+}
+ion-card-subtitle
+{
+    color:white;
 }

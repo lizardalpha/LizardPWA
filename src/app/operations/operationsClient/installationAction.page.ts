@@ -15,8 +15,12 @@ import { CompressImageService } from '../../_services/CompressImageService.compo
 import { CompressNormalImagesService } from '../../_services/CompressNormalImagesService.component';
 import { take } from 'rxjs/operators';
 import { ExifService } from '../../_services/exif.service';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 
+const httpOptions = {
+  headers: new HttpHeaders({ 'Content-Type': 'application/json' })
+};
+declare var jQuery: any;
 @Component({
     selector: 'app-installationActions',
   templateUrl: './installationAction.page.html',
@@ -44,11 +48,22 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
   public list: any[];
   public baseImage: any;
   public originalFile: any;
+  public viewInstallationsFilterAction: any;
+  public hasCapexItem: boolean = false;
+  public scannedCapexItem: boolean = false;
+  public amountOfInstallations: number[];
+  public amountChosenToInstall: number = 1;
+  barcodeValidity: boolean = true;
+  tempBarcodeScanned: TempBarcode;
+  public removingBarcodes: boolean = false;
+  barcodesToRemove: barcodesWithId[];
 
-  constructor(private http: HttpClient,private router: Router, private route: ActivatedRoute, private formBuilder: FormBuilder, private opsClientService: OpsClientService, private storage: Storage, private opsAdminService: OpsAdminService, private opsUniversalService: OpsUniversalService, private compressImage: CompressImageService, private compressImageNormal: CompressNormalImagesService,, private exifService: ExifService) {
+  constructor(private http: HttpClient,private router: Router, private route: ActivatedRoute, private formBuilder: FormBuilder, private opsClientService: OpsClientService, private storage: Storage, private opsAdminService: OpsAdminService, private opsUniversalService: OpsUniversalService, private compressImage: CompressImageService, private compressImageNormal: CompressNormalImagesService,private exifService: ExifService) {
     this.list = new Array();
    
     try {
+     
+
       if (this.router.getCurrentNavigation().extras.state != null) {
 
         this.action = this.router.getCurrentNavigation().extras.state.data;
@@ -92,10 +107,16 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
 
   ngOnInit() {
     this.getIRCodes();
-   
-    this.getAllFavorites().then(v => {
-      console.log(v);
-    });
+    if (this.action.masterItemWithBarcodes.length > 0 || this.action.masterItemGroupWithBarcodes.length > 0) {
+
+      this.hasCapexItem = true;
+      this.amountOfInstallations = Array.from(Array(this.action.qtyToInstall).keys());
+      alert('it has capex');
+    }
+    else {
+      this.scannedCapexItem = true;
+    }
+    console.log(this.action);
     
     }
 
@@ -446,7 +467,275 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
     //this.redirectAterFinishingCampaign();
 
   }
+  finishCampaign() {
+    //ok, ensure the comment is not same as default.
 
+
+    if ((this.action.ircodeDefaultComment == this.action.IRCodeComment) && (this.action.ircodeDefaultComment != null) && (this.action.selectedIRCode.hasComment)) {
+
+      alert('Please specify a comment that differs from the default comment.');
+      return;
+    }
+    if (this.action.IRCodeComment == '' && (this.action.selectedIRCode.hasComment)) {
+      alert('Please specify a comment.');
+      return;
+    }
+
+    this.action.campaignFinished = true;
+    this.updateStoreVisitToApi();
+    //here we have to check.
+
+    //lets do a quick check
+
+
+    //ok, the user is happy and finishing the campaign, let them finish it and go back to the previous screen
+  }
+
+  redirectAterFinishingCampaign() {
+    if (this.action.campaignFinished == true) {
+      var isStoreCompleted = true;
+      this.store.storeInstallations.forEach(function (value) {
+        if (value.campaignFinished == false) {
+          isStoreCompleted = false;
+
+        }
+      });
+
+
+      if (isStoreCompleted) {
+        this.store.storeVisitCompleted = true;
+        this.router.navigate(['/Operations/'], { state: { data: this.store } });
+      }
+      else {
+        this.router.navigate(['/Operations/Installations/'], { state: { data: this.store, filterAction: this.viewInstallationsFilterAction } });
+      }
+    }
+  }
+  openCampaign() {
+
+    this.action.campaignFinished = false;
+    if (!this.opsClientService.checkForSlowSpeed()) {
+      this.updateStoreVisitToApi();
+    }
+  }
+  setAmountToInstall(value) {
+
+    this.amountChosenToInstall = value;
+  }
+
+  updateBarcodeScanned(event, barcodes, masterItemId, type) {
+    var hc = event.keyCode;
+    this.barcodeValidity = true;
+    if (hc == 13) {
+      var scannedBarCode = barcodes.filter(x => x.barcode == event.target.value)[0];
+      if (event.target.value == "") {
+        alert('Barcode cannot be empty');
+        event.target.focus();
+
+        return;
+      }
+      //check that it exists in the barcodes
+      if (scannedBarCode) {
+        if (type == 'group') {
+
+          this.action.masterItemGroupWithBarcodes.filter(x => x.masterItemGroupId == masterItemId)[0].scannedBarcodes.push(scannedBarCode);
+          //remove from array
+          this.action.masterItemGroupWithBarcodes.filter(x => x.masterItemGroupId == masterItemId)[0].barcodes.splice(scannedBarCode, 1);
+          localStorage.setItem('InstallationAction', JSON.stringify(this.action));
+          this.checkIfAllBarcodesScanned();
+          //this.updateStoreVisitToApi();
+        }
+        else {
+
+          this.action.masterItemWithBarcodes.filter(x => x.masterItemId == masterItemId)[0].scannedBarcodes.push(scannedBarCode);
+          //remove from array
+          this.action.masterItemWithBarcodes.filter(x => x.masterItemId == masterItemId)[0].barcodes.splice(scannedBarCode, 1);
+          localStorage.setItem('InstallationAction', JSON.stringify(this.action));
+          this.checkIfAllBarcodesScanned();
+          //this.updateStoreVisitToApi();
+        }
+
+      }
+      else {
+        this.tempBarcodeScanned = new TempBarcode();
+        this.tempBarcodeScanned.barcode = event.target.value;
+        this.tempBarcodeScanned.type = type;
+        this.tempBarcodeScanned.masterItemId = masterItemId;
+        this.tempBarcodeScanned.masterItemGroupId = masterItemId;
+        this.barcodeValidity = false;
+        alert('Invalid barcode.')
+       // jQuery('#errorModal').modal('show');
+        event.target.focus();
+        return;
+      }
+    }
+    else {
+      //console.log(event, barcodes, masterItemId, type);
+      return;
+    }
+
+    //console.log(event);
+
+
+
+    //check that the barcode exist.
+    //this.qtyExpected = event.target.value;
+    //check that it is in the barcodes
+
+  }
+  removeBarcodeShow() {
+
+    this.removingBarcodes = !this.removingBarcodes;
+  }
+
+  scanBarcodeToRemove(event) {
+    var hc = event.keyCode;
+    this.barcodeValidity = true;
+
+    if (hc == 13) {
+
+      //check if it exists in the store at least.
+      var barcodeFoundBool = false;
+      var barcodeFound;
+      this.action.masterItemWithBarcodes.forEach(function (barcodes) {
+
+        if (barcodes.barcodes.filter(x => x.barcode == event.target.value).length > 0) {
+          barcodeFoundBool = true;
+          barcodeFound = barcodes.barcodes.filter(x => x.barcode == event.target.value);
+
+        }
+        //check if barcode is in there
+      });
+      //check the groups as well
+      if (!barcodeFoundBool) {
+        this.action.masterItemGroupWithBarcodes.forEach(function (barcodes) {
+
+          if (barcodes.barcodes.filter(x => x.barcode == event.target.value).length > 0) {
+            barcodeFoundBool = true;
+            barcodeFound = barcodes.barcodes.filter(x => x.barcode == event.target.value);
+
+          }
+          //check if barcode is in there
+        });
+      }
+
+      if (!barcodeFoundBool) {
+        jQuery('#errorModalRemovingBarcodes').modal('show');
+
+        this.tempBarcodeScanned = new TempBarcode();
+        this.tempBarcodeScanned.barcode = event.target.value;
+
+      }
+      else {
+        var barcodeToRemove = new barcodesWithId();
+
+
+        barcodeToRemove.barcode = event.target.value;
+        barcodeToRemove.id = this.barcodesToRemove.length + 1;
+
+        this.barcodesToRemove.push(barcodeFound[0]);
+        this.action.barcodesToRemove = this.barcodesToRemove;
+        localStorage.setItem('InstallationAction', JSON.stringify(this.action));
+
+
+      }
+
+
+      return;
+    }
+  }
+
+  removeBarcodeFromBarcodesToRemove(barcode) {
+
+    var index = this.barcodesToRemove.filter(x => x.id == barcode.id)[0];
+    this.barcodesToRemove.splice(this.barcodesToRemove.indexOf(index), 1);
+    this.action.barcodesToRemove = this.barcodesToRemove;
+    localStorage.setItem('InstallationAction', JSON.stringify(this.action));
+
+    // this.barcodesToRemove.filter(x => x.id == barcode.id)[0].splice(barcode, 1);
+  }
+
+
+  forceBarcodeScan() {
+    var tempBarcodeScanned = new barcodesWithId();
+    tempBarcodeScanned.barcode = this.tempBarcodeScanned.barcode;
+    tempBarcodeScanned.id = 0;
+    tempBarcodeScanned.storeId = this.store.storeId;
+    tempBarcodeScanned.installationActionId = this.action.installationScheduleCurrentID;
+    if (this.tempBarcodeScanned.type == 'group') {
+
+      this.action.masterItemGroupWithBarcodes.filter(x => x.masterItemGroupId == this.tempBarcodeScanned.masterItemGroupId)[0].scannedBarcodes.push(tempBarcodeScanned);
+      //remove from array
+      //this.action.masterItemGroupWithBarcodes.filter(x => x.masterItemGroupId == masterItemId)[0].barcodes.splice(scannedBarCode, 1);
+      localStorage.setItem('InstallationAction', JSON.stringify(this.action));
+      this.checkIfAllBarcodesScanned();
+      //this.updateStoreVisitToApi();
+    }
+    else {
+
+      this.action.masterItemWithBarcodes.filter(x => x.masterItemId == this.tempBarcodeScanned.masterItemId)[0].scannedBarcodes.push(tempBarcodeScanned);
+      //remove from array
+      localStorage.setItem('InstallationAction', JSON.stringify(this.action));
+      this.checkIfAllBarcodesScanned();
+      //this.updateStoreVisitToApi();
+    }
+  }
+
+  forceBarcodeRemove() {
+    var tempBarcodeScanned = new barcodesWithId();
+    tempBarcodeScanned.barcode = this.tempBarcodeScanned.barcode;
+    tempBarcodeScanned.id = 0;
+    tempBarcodeScanned.storeId = this.store.storeId;
+    tempBarcodeScanned.installationActionId = this.action.installationScheduleCurrentID;
+
+
+    this.barcodesToRemove.push(tempBarcodeScanned);
+    this.action.barcodesToRemove = this.barcodesToRemove;
+    localStorage.setItem('InstallationAction', JSON.stringify(this.action));
+
+
+  }
+  checkIfAllBarcodesScanned() {
+
+    var isAllScanned = true;
+    var amountTOScan = this.amountChosenToInstall;
+    this.action.masterItemWithBarcodes.forEach(function (value) {
+
+      if ((value.amountRequired * amountTOScan) != value.scannedBarcodes.length) {
+        isAllScanned = false;
+
+      }
+    });
+
+    this.action.masterItemGroupWithBarcodes.forEach(function (value) {
+
+      if ((value.amountRequired * amountTOScan) != value.scannedBarcodes.length) {
+        isAllScanned = false;
+
+      }
+    });
+
+    this.scannedCapexItem = isAllScanned;
+
+    if (isAllScanned && this.action.masterItemWithBarcodes && this.action.masterItemWithBarcodes.length > 0) {
+
+      this.updateStoreVisitToApi();
+    }
+  }
+
+  removeBarcodeFromScanned(barcode, masterItemId, type) {
+    if (type == 'group') {
+      this.action.masterItemGroupWithBarcodes.filter(x => x.masterItemGroupId == masterItemId)[0].scannedBarcodes.splice(barcode, 1);
+      this.action.masterItemGroupWithBarcodes.filter(x => x.masterItemGroupId == masterItemId)[0].barcodes.push(barcode);
+    }
+    else {
+      this.action.masterItemWithBarcodes.filter(x => x.masterItemId == masterItemId)[0].scannedBarcodes.splice(barcode, 1);
+      this.action.masterItemWithBarcodes.filter(x => x.masterItemId == masterItemId)[0].barcodes.push(barcode);
+    }
+
+
+    this.checkIfAllBarcodesScanned();
+  }
 
    uploadFile = async (files) => {
 
@@ -506,13 +795,13 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
       //this.action.campaignPictureTaken = true;
 
       // alert('no here');
-      //this.compressImage.compress(fileToUpload)
-      //  .pipe(take(1))
-      //  .subscribe(compressedImage => {
+      this.compressImage.compress(fileToUpload)
+        .pipe(take(1))
+        .subscribe(compressedImage => {
 
-      //    this.convert(compressedImage, originalFile);
+          this.convert(compressedImage, originalFile);
 
-      //  })
+        })
       //this.action.campaignPictureTaken = true;
       //this.actionEvent.emit(this.action);
       //const myBase64File = this.convert(fileToUpload);
@@ -562,24 +851,31 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
           // this.action.campaignPictureTaken = true;
           // this.actionEvent.emit(this.action);
 
+          var startCounter = 0;
+          var endCounter = 50; this.viewCompletedVisits
+          while (startCounter <= endCounter) {
+            startCounter += 1;
 
+            this.setData('picture' + this.action.installationScheduleCurrentID + startCounter.toString(), resized); 
+            
+          }
 
-          this.dbService.add('OfflineImages', { actionID: this.action.installationScheduleCurrentID, baseImage: resized }).subscribe(
-            () => {
-              // Do something after the value was added
-              //this.action.campaignPictureTaken = true;
-              //this.action.amountOfPhotosTaken = this.action.amountOfPhotosTaken + 1;
+          //this.dbService.add('OfflineImages', { actionID: this.action.installationScheduleCurrentID, baseImage: resized }).subscribe(
+          //  () => {
+          //    // Do something after the value was added
+          //    //this.action.campaignPictureTaken = true;
+          //    //this.action.amountOfPhotosTaken = this.action.amountOfPhotosTaken + 1;
 
-            },
-            error => {
+          //  },
+          //  error => {
 
-              alert('An error occured with uploading picture, plesase STOP and contact Administrator immediately' + error);
+          //    alert('An error occured with uploading picture, plesase STOP and contact Administrator immediately' + error);
 
-              // console.log(error);
-              //this.action.campaignPictureTaken = false;
-              //this.actionEvent.emit(this.action);
-            }
-          );
+          //    // console.log(error);
+          //    //this.action.campaignPictureTaken = false;
+          //    //this.actionEvent.emit(this.action);
+          //  }
+          //);
 
 
 
@@ -655,4 +951,19 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
 }
 interface FileWithCampaign extends File {
   campaignNumber: string;
+}
+class TempBarcode {
+  public barcode;
+  public type;
+  public masterItemId;
+  public masterItemGroupId;
+  public id;
+
+}
+class barcodesWithId {
+  id: number;
+  barcode: string;
+  installationTeamId: number;
+  storeId: number;
+  installationActionId: string;
 }

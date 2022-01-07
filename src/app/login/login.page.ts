@@ -47,9 +47,7 @@ export class LoginPage implements OnInit {
     }
 
     onSubmit() {
-      alert(
-        this.email + ', ' + this.password
-      )
+      
 
       var model = {
         email: this.email,
