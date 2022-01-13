@@ -101,9 +101,17 @@
                         itemValueField="irCodeID"
                         itemTextField="irCodeName"
                         [canSearch]="true"
-                        (onChange)="portChange($event)">
+                        (onChange)="selectIrCode($event)">
       </ionic-selectable>
     </ion-item>
+    <div *ngIf="skipVisitComment">
+      <h2>Please enter a comment : </h2>
+      <textarea rows="5" style="width:100%;"  [(ngModel)]="skipVisitCommentValue">
 
+      </textarea>
+    </div>
+    <div *ngIf="skipVisitSelectedIRCode && ((skipVisitComment && skipVisitCommentValue.length > 1) || !skipVisitComment)">
+      <ion-button expand="full" size="small" (click)="actionSkipStoreVisit()">Finish Skip Store Visit</ion-button>
+    </div>
   </div>
 </ion-content>

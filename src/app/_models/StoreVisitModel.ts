@@ -38,7 +38,7 @@ export class CampaignVisit {
     qtyToInstall: number;
     status: string;
     selectedIRCode: IRCodeModel;
-  IRCodeComment: string = '';
+  irCodeComment: string = '';
   previousIRCode: IRCodeModel;
   previousIRCodeComment: string = '';
     ircodeDefaultComment: string = '';

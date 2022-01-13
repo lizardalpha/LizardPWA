@@ -32,6 +32,7 @@ export class OpsHomeClientStoresComponent implements OnInit {
   recentSearches: any = [];
   public showStockDetails: boolean = false;
   public allInstallationsForView: any[];
+  public mustSync: boolean = false;
 
   constructor(private router: Router, private route: ActivatedRoute, private formBuilder: FormBuilder, private opsClientService: OpsClientService, private storage: Storage, public navCtrl: NavController) {
     this.currentSpeedSlow = this.opsClientService.checkForSlowSpeed();
@@ -39,22 +40,28 @@ export class OpsHomeClientStoresComponent implements OnInit {
   }
 
   ngOnInit() {
+    //we need to first check if any stores are out of sync before loading from the api.
 
-    if (!this.currentSpeedSlow) {
+    this.loadToken('StoreVisists', (result?: any) => {
+      // here your result
+      if (this.storeVisist == null) {
+      //ignore temp obviously
+      }
+      console.log(result);
+      if (result.filter(x => x['storeVisitOutOfSync'] == true).length > 0) {
+        this.mustSync = true;
+        alert(this.mustSync);
+      }
+    });
+
+    
+   }
+
+  getStoreVisitsFromLive() {
+    if (!this.currentSpeedSlow && !this.mustSync) {
       this.getStoreVisists('');
     }
-    else {
-      this.loadToken('StoreVisists',(result?: any) => {
-      // here your result
-         if (this.storeVisist == null) {
-           this.getStoreVisists('');
-         }
-      console.log(result);
-    });
-    }
-    }
-
-
+  }
   getStoreVisists(showMessage) {
 
     this.opsClientService.getStoreVisistsNew().subscribe(

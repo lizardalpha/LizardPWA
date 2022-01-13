@@ -142,8 +142,8 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
   }
 
   clearIRCode() {
-    if (this.action.ircodeDefaultComment == this.action.IRCodeComment) {
-      this.action.IRCodeComment = '';
+    if (this.action.ircodeDefaultComment == this.action.irCodeComment) {
+      this.action.irCodeComment = '';
     }
 
   }
@@ -154,7 +154,7 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
     this.action.selectedIRCode = event.value;
     this.action.campaignIRCodeSelected = true;
     this.action.needsIrCodeComment = this.action.selectedIRCode.hasComment;
-    this.action.IRCodeComment = this.action.selectedIRCode.defaultComment;
+    this.action.irCodeComment = this.action.selectedIRCode.defaultComment;
     this.action.ircodeDefaultComment = this.action.selectedIRCode.defaultComment;
     console.log(this.action);
   }
@@ -185,7 +185,11 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
         }
       },
       err => {
-        this.IRCodes = JSON.parse(localStorage.getItem('IRCodes'))
+        this.storage.get('IRCodes').then(x => {
+          this.IRCodes = x;
+        });
+
+       
         
       }
     );
@@ -200,12 +204,12 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
 
     if (this.action.selectedIRCode.hasComment == true) {
       this.action.needsIrCodeComment = true;
-      this.action.IRCodeComment = this.action.selectedIRCode.defaultComment;
+      this.action.irCodeComment = this.action.selectedIRCode.defaultComment;
       this.action.ircodeDefaultComment = this.action.selectedIRCode.defaultComment;
     }
     else {
       this.action.needsIrCodeComment = false;
-      this.action.IRCodeComment = '';
+      this.action.irCodeComment = '';
     }
 
 
@@ -474,13 +478,14 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
       this.storeVisist = x;
       console.log(this.storeVisist);
       this.storeVisist.map((todo, i) => {
+        console.log(todo);
         if (todo.storeId == this.store.storeId) {
-
+          console.log(todo.storeId);
           this.storeVisist[i] = this.store;
           //this.store.storeInstallations[i] = this.action;
         }
       });
-
+      this.storage.set('StoreVisists', this.storeVisist);
       this.currentStore = this.storeVisist.filter(x => x.storeId == this.store.storeId)[0];
       this.currentStore.storeInstallations.filter(x => x.installationScheduleCurrentID == this.action.installationScheduleCurrentID)[0] = this.action;
       //console.log(this.currentStore);
@@ -499,12 +504,12 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
     //ok, ensure the comment is not same as default.
 
 
-    if ((this.action.ircodeDefaultComment == this.action.IRCodeComment) && (this.action.ircodeDefaultComment != null) && (this.action.selectedIRCode.hasComment)) {
+    if ((this.action.ircodeDefaultComment == this.action.irCodeComment) && (this.action.ircodeDefaultComment != null) && (this.action.selectedIRCode.hasComment)) {
 
       alert('Please specify a comment that differs from the default comment.');
       return;
     }
-    if (this.action.IRCodeComment == '' && (this.action.selectedIRCode.hasComment)) {
+    if (this.action.irCodeComment == '' && (this.action.selectedIRCode.hasComment)) {
       alert('Please specify a comment.');
       return;
     }
@@ -830,7 +835,7 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
           this.convert(compressedImage, originalFile);
 
         })
-      //this.action.campaignPictureTaken = true;
+      this.action.campaignPictureTaken = true;
       //this.actionEvent.emit(this.action);
       //const myBase64File = this.convert(fileToUpload);
     }

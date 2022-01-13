@@ -111,12 +111,12 @@ export class OpsIRCodeComponent implements OnInit {
       this.action.forceCapexScan = this.selectedIRCode.forceCapexScan;
       if (this.selectedIRCode.hasComment == true) {
             this.action.needsIrCodeComment = true;
-        this.action.IRCodeComment = this.selectedIRCode.defaultComment;
+        this.action.irCodeComment = this.selectedIRCode.defaultComment;
         this.action.ircodeDefaultComment = this.selectedIRCode.defaultComment;
         }
         else {
           this.action.needsIrCodeComment = false;
-          this.action.IRCodeComment = '';
+        this.action.irCodeComment = '';
         }
        
         
@@ -134,12 +134,12 @@ export class OpsIRCodeComponent implements OnInit {
     
     if (this.selectedIRCode.hasComment == true) {
       this.action.needsIrCodeComment = true;
-      this.action.IRCodeComment = this.selectedIRCode.defaultComment;
+      this.action.irCodeComment = this.selectedIRCode.defaultComment;
       this.action.ircodeDefaultComment = this.selectedIRCode.defaultComment;
     }
     else {
       this.action.needsIrCodeComment = false;
-      this.action.IRCodeComment = '';
+      this.action.irCodeComment = '';
     }
 
 

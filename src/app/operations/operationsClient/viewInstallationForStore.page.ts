@@ -1,10 +1,11 @@
-import { Component, Inject } from '@angular/core';
+import { Component } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CampaignVisit, StoreVisitModel } from '../../_models/StoreVisitModel';
-
+import { Storage } from '@ionic/storage-angular';
 import { OpsUniversalService } from '../../_services/opsUniversal.service';
 import { OpsClientService } from '../../_services/opsClient.service';
+import { OpsAdminService } from '../../_services/opsAdmin.service';
 
 
 @Component({
@@ -26,10 +27,13 @@ export class OpsHomeClientStoresInstallationsComponent {
   public storeVisitStartedText = 'Store Visit Not Started';
   public needsSaving: boolean = false;
   public skipStoreVisitBit: boolean = false;
+  public skipVisitComment: boolean = false;
   public filterActionText: string = '';
   public storeInstallationsFiltered: CampaignVisit[];
   searchTerm: string;
   public IRCodes: any[];
+  public skipVisitCommentValue: string = '';
+  public skipVisitSelectedIRCode: any;
 
 
   public storeInstallationsPending: CampaignVisit[];
@@ -40,7 +44,7 @@ export class OpsHomeClientStoresInstallationsComponent {
   imageActionIDs: any[];
   hasImagesToUpload: boolean = false;
   amountOfImagesToUpload: number = 0;
-  constructor(private router: Router, private http: HttpClient,  private _Activatedroute: ActivatedRoute, private opsUniversalService: OpsUniversalService, private opsClientService: OpsClientService) {
+  constructor(private router: Router, private http: HttpClient, private _Activatedroute: ActivatedRoute, private opsUniversalService: OpsUniversalService, private opsClientService: OpsClientService, private opsAdminService: OpsAdminService, private storage: Storage) {
     this.imageActionIDs = new Array();
     if (this.router.getCurrentNavigation().extras.state != null) {
       this.filterAction = this.router.getCurrentNavigation().extras.state.filterAction;
@@ -72,6 +76,7 @@ export class OpsHomeClientStoresInstallationsComponent {
   }
   ngOnInit() {
     this.segment = 'pending';
+    this.IRCodes = new Array();
     this.storeInstallationsFiltered = this.store.storeInstallations;
 
     this.storeInstallationsPending = this.store.storeInstallations.filter(x => x.campaignFinished == false);
@@ -124,6 +129,74 @@ export class OpsHomeClientStoresInstallationsComponent {
 
   skipStoreVisit() {
     this.skipStoreVisitBit = !this.skipStoreVisitBit;
+    this.getIRCodes();
+  }
+  getIRCodes() {
+
+    this.opsAdminService.getIRCodes().subscribe(
+      data => {
+        console.log(data);
+
+        data.filter((word, index, arr) => {
+          console.log(word['isStoreSkip']);
+          if (word['isStoreSkip']) {
+            this.IRCodes.push(word);
+          }
+        })
+
+      
+        this.storage.set('IRCodes', JSON.stringify(this.IRCodes));
+        console.log(this.IRCodes);
+      
+      },
+      err => {
+        this.storage.get('IRCodes').then(
+          x =>
+         {
+            this.IRCodes = x;         
+        });
+       
+
+      }
+    );
+  }
+
+  selectIrCode(irCode) {
+    console.log(irCode.value);
+    this.skipVisitComment = irCode.value.hasComment;
+    console.log(this.skipVisitComment);
+    this.skipVisitSelectedIRCode = irCode.value;
+  }
+  actionSkipStoreVisit() {
+    console.log(this.skipVisitComment);
+    var irCodeSelectedComment = this.skipVisitCommentValue;
+    var skipVisitCommentBool = this.skipVisitComment;
+    this.store.storeInstallations.forEach((action) => {
+      action.campaignIRCodeSelected = true;
+      action.selectedIRCode = this.skipVisitSelectedIRCode;
+      if (skipVisitCommentBool) {
+        action.irCodeComment = irCodeSelectedComment;
+      }
+
+      action.campaignFinished = true;
+      console.log(action);
+    });
+
+    this.updateStoreVisitToApi(this.store);
+  }
+  updateStoreVisitToApi(store) {
+
+
+    this.opsClientService.updateStoreVisistFull(store).subscribe(
+      data => {
+        this.router.navigate(['/Operations/'], { state: { data: this.store } });
+      },
+      err => {
+      
+        alert(err);
+        console.log(err);
+      }
+    );
   }
 
   filterActionsByText(event) {
