@@ -25,10 +25,11 @@ export class OpsHomeClientStoresInstallationsComponent {
   public storeFiltered: any;
   public storeVisitStartedText = 'Store Visit Not Started';
   public needsSaving: boolean = false;
-  public skipVisitVal: boolean = false;
+  public skipStoreVisitBit: boolean = false;
   public filterActionText: string = '';
   public storeInstallationsFiltered: CampaignVisit[];
-
+  searchTerm: string;
+  public IRCodes: any[];
 
 
   public storeInstallationsPending: CampaignVisit[];
@@ -121,8 +122,8 @@ export class OpsHomeClientStoresInstallationsComponent {
 
   }
 
-  skipVisit() {
-    this.skipVisitVal = !this.skipVisitVal;
+  skipStoreVisit() {
+    this.skipStoreVisitBit = !this.skipStoreVisitBit;
   }
 
   filterActionsByText(event) {

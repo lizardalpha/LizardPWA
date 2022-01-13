@@ -1,5 +1,12 @@
 <ion-content class="ion-padding">
-
+  <ion-header>
+    <ion-toolbar>
+      <ion-buttons slot="start">
+        <ion-back-button defaultHref="/Operations"></ion-back-button>
+      </ion-buttons>
+      <ion-button expand="full" size="small" (click)="skipStoreVisit()">Skip Store Visit</ion-button>
+    </ion-toolbar>
+  </ion-header>
   <ion-segment [(ngModel)]="segment" scrollable>
     <ion-segment-button value="pending">
       Pending
@@ -7,14 +14,15 @@
     <ion-segment-button value="completed">
       Completed
     </ion-segment-button>
- 
+
   </ion-segment>
-
-
-  <div [ngSwitch]="segment">
+ 
+  <ion-searchbar [(ngModel)]="searchTerm"></ion-searchbar>
+  <span>{{searchTerm}}</span>
+  <div [ngSwitch]="segment" *ngIf="!skipStoreVisitBit">
     <div *ngSwitchCase="'pending'">
-      <ion-card *ngFor="let visits of storeInstallationsPending" (click)="getActionForCampaign(visits)">
-        <ion-card-header>
+      <ion-card *ngFor="let visits of storeInstallationsPending | filter:searchTerm" (click)="getActionForCampaign(visits)" [ngClass]="{'bg-primary mb-3': visits.status == 'Install','bg-success  mb-3' : visits.status == 'Running','bg-danger   mb-3' : visits.status == 'Remove'}">
+        <ion-card-header style="color:white">
           {{visits.qtyToInstall}} x {{visits.mediaType}}
         </ion-card-header>
         <ion-card-content>
@@ -43,13 +51,13 @@
               <tr *ngFor="let masterItem of visits.masterItemGroupWithBarcodes"><td> {{masterItem.masterItemGroupName}}</td></tr>
             </span>
           </div>
-
+          <h4 class="text-white">{{visits.status}}</h4>
         </ion-card-content>
       </ion-card>
     </div>
     <div *ngSwitchCase="'completed'">
-      <ion-card *ngFor="let visits of storeInstallationsCompleted">
-        <ion-card-header>
+      <ion-card *ngFor="let visits of storeInstallationsCompleted | filter:searchTerm" [ngClass]="{'bg-primary mb-3': visits.status == 'Install','bg-success  mb-3' : visits.status == 'Running','bg-danger   mb-3' : visits.status == 'Remove'}">
+        <ion-card-header style="color:white">
           {{visits.qtyToInstall}} x {{visits.mediaType}}
         </ion-card-header>
         <ion-card-content>
@@ -78,10 +86,24 @@
               <tr *ngFor="let masterItem of visits.masterItemGroupWithBarcodes"><td> {{masterItem.masterItemGroupName}}</td></tr>
             </span>
           </div>
+          <h4 class="text-white">{{visits.status}}</h4>
 
         </ion-card-content>
       </ion-card>
     </div>
-     
-    </div>
+
+  </div>
+  <div *ngIf="skipStoreVisitBit">
+    <ion-item >
+      <ion-label>IR Code</ion-label>
+      <ionic-selectable [(ngModel)]="irCode"
+                        [items]="IRCodes"
+                        itemValueField="irCodeID"
+                        itemTextField="irCodeName"
+                        [canSearch]="true"
+                        (onChange)="portChange($event)">
+      </ionic-selectable>
+    </ion-item>
+
+  </div>
 </ion-content>

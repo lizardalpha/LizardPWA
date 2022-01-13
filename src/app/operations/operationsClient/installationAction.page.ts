@@ -57,6 +57,9 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
   tempBarcodeScanned: TempBarcode;
   public removingBarcodes: boolean = false;
   barcodesToRemove: barcodesWithId[];
+  public isModalOpen: boolean = true;
+  public skipStoreVisitBit: boolean = false;
+
 
   constructor(private http: HttpClient,private router: Router, private route: ActivatedRoute, private formBuilder: FormBuilder, private opsClientService: OpsClientService, private storage: Storage, private opsAdminService: OpsAdminService, private opsUniversalService: OpsUniversalService, private compressImage: CompressImageService, private compressImageNormal: CompressNormalImagesService,private exifService: ExifService) {
     this.list = new Array();
@@ -161,7 +164,7 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
 
     this.opsAdminService.getIRCodes().subscribe(
       data => {
-        console.log(data);
+       
         this.IRCodes = data;
         localStorage.setItem('IRCodes', JSON.stringify(this.IRCodes));
 
@@ -171,13 +174,13 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
         else {
 
           if (this.action.previousIRCode && this.action.status != 'Remove') {
-            //this.selectedIRCode = this.action.previousIRCode;
+            this.action.selectedIRCode = this.action.previousIRCode;
           }
           else {
-            //this.selectedIRCode = this.IRCodes.filter(x => x.irCodeName.toLowerCase() == 'ad up')[0];
+            this.action.selectedIRCode = this.IRCodes.filter(x => x.irCodeName.toLowerCase() == 'ad up')[0];
           }
           //this.firstLoad = false;
-          //this.setIRCodeForActionDefault(this.selectedIRCode);
+          this.setIRCodeForActionDefault(this.action.selectedIRCode);
 
         }
       },
@@ -188,7 +191,27 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
     );
   }
 
+  setIRCodeForActionDefault(irCode) {
+    //alert('yeah');
+   
+    this.action.campaignIRCodeSelected = true;
+   
+    this.action.forceCapexScan = this.action.selectedIRCode.forceCapexScan;
 
+    if (this.action.selectedIRCode.hasComment == true) {
+      this.action.needsIrCodeComment = true;
+      this.action.IRCodeComment = this.action.selectedIRCode.defaultComment;
+      this.action.ircodeDefaultComment = this.action.selectedIRCode.defaultComment;
+    }
+    else {
+      this.action.needsIrCodeComment = false;
+      this.action.IRCodeComment = '';
+    }
+
+
+    //this.action.SelectedIRCode = this.SelectedIRCode;
+    //this.actionEvent.emit(this.action);
+  }
 
 
 
@@ -447,24 +470,29 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
       }
     });
 
-    this.storeVisist = JSON.parse(localStorage.getItem('StoreVisists'));
-    this.storeVisist.map((todo, i) => {
-      if (todo.storeId == this.store.storeId) {
+    this.storage.get('StoreVisists').then(x => {
+      this.storeVisist = x;
+      console.log(this.storeVisist);
+      this.storeVisist.map((todo, i) => {
+        if (todo.storeId == this.store.storeId) {
 
-        this.storeVisist[i] = this.store;
-        //this.store.storeInstallations[i] = this.action;
-      }
+          this.storeVisist[i] = this.store;
+          //this.store.storeInstallations[i] = this.action;
+        }
+      });
+
+      this.currentStore = this.storeVisist.filter(x => x.storeId == this.store.storeId)[0];
+      this.currentStore.storeInstallations.filter(x => x.installationScheduleCurrentID == this.action.installationScheduleCurrentID)[0] = this.action;
+      //console.log(this.currentStore);
+      this.storeVisist.filter(x => x.storeId == this.store.storeId)[0] = this.currentStore;
     });
-
-    this.currentStore = this.storeVisist.filter(x => x.storeId == this.store.storeId)[0];
-    this.currentStore.storeInstallations.filter(x => x.installationScheduleCurrentID == this.action.installationScheduleCurrentID)[0] = this.action;
-    //console.log(this.currentStore);
-    this.storeVisist.filter(x => x.storeId == this.store.storeId)[0] = this.currentStore;
+   
+   
     //console.log(this.storeVisist.filter(x => x.storeId == this.store.storeId)[0]);
     localStorage.removeItem('StoreVisists');
     localStorage.setItem('StoreVisists', JSON.stringify(this.storeVisist));
 
-    //this.redirectAterFinishingCampaign();
+    this.redirectAterFinishingCampaign();
 
   }
   finishCampaign() {
@@ -827,6 +855,40 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
 
    }
 
+  getAnswerBack($event) {
+    //this.updateStoreVisitToApi();
+    if (this.action.hasAnswersChanged) {
+
+      this.updateStoreVisitToApi();
+      this.action.hasAnswersChanged = false;
+      this.checkAllQuestionsAnswered();
+    }
+
+  }
+
+  checkAllQuestionsAnswered() {
+    //alert('yeah');
+    if (this.action.isMerchandisingContract) {
+      var hasAllAnswered = true;
+
+      var actionQuestions = this.action.installationScheduleQuestionsAndAnswers;
+      this.action.media.questions.forEach(function (question) {
+        // console.log(question);
+        let currentItem = actionQuestions.find(i => i.questionId === question.questionId);
+        // console.log(currentItem);
+
+        //maybe check for comment here
+
+        if (!currentItem) {
+          hasAllAnswered = false;
+
+        }
+      });
+      this.action.allMerchandisingQuestionsAnswered = hasAllAnswered;
+    }
+  }
+
+  
 
   private convert(myFile: File, originalFile): Promise<string | ArrayBuffer> {
     return new Promise<string | ArrayBuffer>((resolve, reject) => {

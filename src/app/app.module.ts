@@ -20,7 +20,9 @@ import { LoaderService } from './directives/loader.service';
 import { ItemsearchPipe } from './directives/itemsearchpipe.component';
 import { OpsIRCodeComponent } from './_shared/operationsClient/irCodes.component';
 import { OpsIRCodeComponentModule } from './_shared/operationsClient/irCodes.module';
-import {  IonicSelectableModule } from 'ionic-selectable';
+import { IonicSelectableModule } from 'ionic-selectable';
+import { ModalController } from '@ionic/angular';
+import { Ng2SearchPipeModule } from 'ng2-search-filter';
 
 @NgModule({
   declarations: [
@@ -37,6 +39,7 @@ import {  IonicSelectableModule } from 'ionic-selectable';
     ReactiveFormsModule,
     OpsIRCodeComponentModule,
     IonicSelectableModule,
+    
     IonicModule.forRoot(),
     IonicStorageModule.forRoot({
       name: '__mydb',
@@ -53,6 +56,7 @@ import {  IonicSelectableModule } from 'ionic-selectable';
   exports: [FormsModule,
     ItemsearchPipe,
     ReactiveFormsModule,
+    Ng2SearchPipeModule
     ],
   bootstrap: [AppComponent],
 })

@@ -6,6 +6,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { OpsClientService } from '../../_services/opsClient.service';
 import { Storage } from '@ionic/storage-angular';
 import { NavController } from '@ionic/angular';
+import { Ng2SearchPipeModule } from 'ng2-search-filter';
 
 @Component({
     selector: 'app-login',
@@ -22,6 +23,15 @@ export class OpsHomeClientStoresComponent implements OnInit {
   public ViewVisitText: string = 'View Completed Store Visits';
   public Title: string = 'Pending Store Visits';
   public ViewStockText: string = 'View Stock for Stores';
+  public allInstallations: any[];
+  public groupedInstalls: any;
+  public groupedMaintains: any;
+  public groupedRemovals: any;
+  public viewStock: boolean = false;
+  searchTerm: string;
+  recentSearches: any = [];
+  public showStockDetails: boolean = false;
+  public allInstallationsForView: any[];
 
   constructor(private router: Router, private route: ActivatedRoute, private formBuilder: FormBuilder, private opsClientService: OpsClientService, private storage: Storage, public navCtrl: NavController) {
     this.currentSpeedSlow = this.opsClientService.checkForSlowSpeed();
@@ -97,6 +107,93 @@ export class OpsHomeClientStoresComponent implements OnInit {
     this.getStoreVisists('It has refreshed your store visists');
   }
   viewStockForStores() {
+
+    var myvar = this.storeVisist.map(x => x.storeInstallations);
+    var AllMediaStatus = new Array();
+
+
+
+
+    var AllMediaToInstall = new Array();
+
+
+    var AllInstallations = new Array();
+
+    myvar.forEach(function (mediaType) {
+
+      mediaType.forEach(function (themedia) {
+        AllInstallations.push(themedia);
+        var myMediaType = {
+
+          mediaType: themedia.mediaType,
+          status: themedia.status,
+          chain: themedia.chain,
+          amountToInstall: themedia.qtyToInstall,
+        }
+        //do the check here
+        //if (AllMediaToInstall.filter(x => x.mediaType == themedia.mediaType && x.mediaChain == themedia.mediaChain && x.status == themedia.status).length > 0) {
+        //  AllMediaToInstall.filter(x => x.mediaType == themedia.mediaType && x.mediaChain == themedia.mediaChain && x.status == themedia.status)[0].amountToInstall += myMediaType.amountToInstall;
+        //  //now we can inrease count instead of adding
+        //}
+        //else {
+        //  AllMediaToInstall.push(myMediaType);
+        //}
+      })
+      //  //lets fine the rest
+      //console.log(mediaType);
+      mediaType.forEach(function (media) {
+
+
+
+      })
+
+      //get all media types for installs and removals here
+
+    });
+    this.allInstallations = new Array();
+
+    this.allInstallations = AllInstallations;
+
+    AllInstallations.forEach(function (themedia) {
+
+      var myMediaType = {
+
+        mediaType: themedia.mediaType,
+        status: themedia.status,
+        chain: themedia.chain,
+        amountToInstall: themedia.qtyToInstall,
+      }
+      if (AllMediaToInstall.filter(x => x.mediaType == myMediaType.mediaType && x.chain == myMediaType.chain && x.status == myMediaType.status).length > 0) {
+        AllMediaToInstall.filter(x => x.mediaType == themedia.mediaType && x.chain == myMediaType.chain && x.status == myMediaType.status)[0].amountToInstall += myMediaType.amountToInstall;
+        //now we can inrease count instead of adding
+      }
+      else {
+        AllMediaToInstall.push(myMediaType);
+      }
+    });
+
+
+    //now we have all the stuff, we can work from here
+
+
+    this.groupedInstalls = AllMediaToInstall.filter(x => x.status == 'Install').map(x => ({ mediatype: x.mediaType, chain: x.chain, amountToInstall: x.amountToInstall })).sort((a, b) => (a.mediatype > b.mediatype) ? 1 : -1);
+    this.groupedMaintains = AllMediaToInstall.filter(x => x.status == 'Running').map(x => ({ mediatype: x.mediaType, chain: x.chain, amountToInstall: x.amountToInstall })).sort((a, b) => (a.mediatype > b.mediatype) ? 1 : -1);
+    this.groupedRemovals = AllMediaToInstall.filter(x => x.status == 'Remove').map(x => ({ mediatype: x.mediaType, chain: x.chain, amountToInstall: x.amountToInstall })).sort((a, b) => (a.mediatype > b.mediatype) ? 1 : -1);
+
+
+
+    
+
+
+    this.viewStock = !this.viewStock;
+    if (this.viewStock) {
+      this.ViewStockText = 'View Store Visits';
+
+    }
+    else {
+      this.ViewStockText = 'View Stock for Stores';
+    }
+  
   }
   getDetailsForStore(store) {
     store.StoreVsistStarted = false;
@@ -128,5 +225,35 @@ export class OpsHomeClientStoresComponent implements OnInit {
   }
 
   syncStore(store) {
+  }
+
+  submit(term?: string) {
+
+    if (term) {
+      this.searchTerm = term;
+    }
+    console.log('searchTerm :>> ', this.searchTerm);
+    if (this.searchTerm && this.searchTerm.trim()) {
+      if (!this.recentSearches.includes(this.searchTerm)) {
+        this.recentSearches.push(this.searchTerm);
+        //this.store.set(this.storageKey, this.recentSearches)
+      }
+    }
+    this.searchTerm = null;
+  }
+
+  clearSearches() {
+    this.recentSearches = [];
+    //this.store.remove(this.storageKey);
+  }
+  viewStockAgain() {
+    this.showStockDetails = !this.showStockDetails;
+  }
+  showMediaInstallDetails(mediaType, amount, chain, status) {
+
+
+    this.allInstallationsForView = this.allInstallations.filter(x => x.mediaType == mediaType && x.status == status && x.chain == chain);
+
+    this.showStockDetails = !this.showStockDetails;
   }
 }

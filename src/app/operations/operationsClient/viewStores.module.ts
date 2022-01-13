@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 
 import { IonicModule } from '@ionic/angular';
 
+import { Ng2SearchPipeModule } from "ng2-search-filter";
+
 import { OpsHomeClientStoresComponentRoutingModule } from './viewStores-routing.module';
 
 import { OpsHomeClientStoresComponent } from './viewStores.page';
@@ -13,6 +15,7 @@ import { OpsHomeClientStoresComponent } from './viewStores.page';
     CommonModule,
     FormsModule,
     IonicModule,
+    Ng2SearchPipeModule,
     OpsHomeClientStoresComponentRoutingModule
   ],
   declarations: [OpsHomeClientStoresComponent]

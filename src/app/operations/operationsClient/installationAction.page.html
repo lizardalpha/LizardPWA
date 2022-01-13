@@ -1,174 +1,193 @@
 
 <ion-content>
+  <!-- Back button with custom text and icon -->
+  <ion-header>
+    <ion-toolbar>
+      <ion-buttons slot="start">
+        <ion-back-button defaultHref="/Operations" ></ion-back-button>
+      </ion-buttons>
+    </ion-toolbar>
+  </ion-header>
   <ion-card scrollY="true">
-  
 
-      <ion-card-header>
 
-        <ion-card-title>{{action.categoryName}}</ion-card-title>
-        <ion-card-subtitle>{{action.qtyToInstall}} x {{action.mediaType}} - {{action.product}}</ion-card-subtitle>
-      </ion-card-header>
-      <ion-card-content scrollY="true">
+    <ion-card-header>
 
-        <span>{{action.client}}</span><br />
+      <ion-card-title>{{action.categoryName}}</ion-card-title>
+      <ion-card-subtitle>{{action.qtyToInstall}} x {{action.mediaType}} - {{action.product}}</ion-card-subtitle>
+    </ion-card-header>
+    <ion-card-content scrollY="true">
 
-        <h5>Special Instructions</h5>
-        <span>{{action.installationInstructions}}</span><br />
-        <ion-button *ngIf="!action.campaignSpecialInstructionsRead" (click)="acceptSpecialInstructions()" id="btnAcceptInstructions" value="Accept Special Instructions">Accept Special Instructions</ion-button><br />
-        <h5 *ngIf="action.campaignSpecialInstructionsRead">Special Instructions Already Accepted</h5><br />
+      <span>{{action.client}}</span><br />
 
-        <span *ngIf="action.previousIRCode">Previous IR Code : {{action.previousIRCode.irCodeName}}</span><br />
-        <span *ngIf="action.previousIRCodeComment">Previous IR Code Comment: {{action.previousIRCodeComment}}</span><br />
+      <h5>Special Instructions</h5>
+      <span>{{action.installationInstructions}}</span><br />
+      <ion-button *ngIf="!action.campaignSpecialInstructionsRead" (click)="acceptSpecialInstructions()" id="btnAcceptInstructions" value="Accept Special Instructions">Accept Special Instructions</ion-button><br />
+      <h5 *ngIf="action.campaignSpecialInstructionsRead">Special Instructions Already Accepted</h5><br />
 
-        <div style="border:1px solid white; padding:5px;" class="rounded" *ngIf="action.campaignSpecialInstructionsRead && !action.campaignIRCodeSelected && !action.isMerchandisingContract ">
-          <h5>Select an IR Code</h5>
+      <span *ngIf="action.previousIRCode">Previous IR Code : {{action.previousIRCode.irCodeName}}</span><br />
+      <span *ngIf="action.previousIRCodeComment">Previous IR Code Comment: {{action.previousIRCodeComment}}</span><br />
 
-          <br />
+      <div style="border:1px solid white; padding:5px;" class="rounded" *ngIf="action.campaignSpecialInstructionsRead && !action.campaignIRCodeSelected && !action.isMerchandisingContract ">
+        <h5>Select an IR Code</h5>
 
-          <br />
+        <br />
+
+        <br />
+      </div>
+
+      <div style="border:1px solid white; padding:5px;" class="rounded" *ngIf="action.campaignSpecialInstructionsRead && action.campaignIRCodeSelected && !action.isMerchandisingContract">
+        <h5>Current IR Code : {{action.selectedIRCode.irCodeName}}</h5>
+        <span>Current IR Code Comment :  {{action.IRCodeComment}} </span><br />
+        <input type="button" class="btn btn-primary btn-block" (click)="changeIRCode()" value="Change IR Code" />
+        <br />
+
+        <br />
+      </div>
+      <ion-item *ngIf="action.campaignSpecialInstructionsRead && !action.campaignIRCodeSelected && !action.isMerchandisingContract ">
+        <ion-label>IR Code</ion-label>
+        <ionic-selectable [(ngModel)]="port"
+                          [items]="IRCodes"
+                          itemValueField="irCodeID"
+                          itemTextField="irCodeName"
+                          [canSearch]="true"
+                          (onChange)="portChange($event)">
+        </ionic-selectable>
+      </ion-item>
+
+      <div style="border:1px solid white; padding:5px;" class="rounded" *ngIf="action.campaignSpecialInstructionsRead && action.campaignIRCodeSelected && !action.campaignFinished && action.needsIrCodeComment">
+        <h5>Comment</h5>
+        <div class="form-row">
+          <div class="form-group col-12">
+            <label>Installer Comment:</label>
+            <textarea type="text" class="form-control" [(ngModel)]="action.IRCodeComment" placeholder="{{action.IRCodeComment}}" (click)="clearIRCode()"></textarea>
+
+          </div>
+
         </div>
+      </div>
+      <br />
 
-        <div style="border:1px solid white; padding:5px;" class="rounded" *ngIf="action.campaignIRCodeSelected && !action.isMerchandisingContract">
-          <h5>Current IR Code : {{action.selectedIRCode.irCodeName}}</h5>
-          <span>Current IR Code Comment :  {{action.IRCodeComment}} </span><br />
-          <input type="button" class="btn btn-primary btn-block" (click)="changeIRCode()" value="Change IR Code" />
-          <br />
-
-          <br />
-        </div>
-        <ion-item *ngIf="action.campaignSpecialInstructionsRead && !action.campaignIRCodeSelected && !action.isMerchandisingContract ">
-          <ion-label>IR Code</ion-label>
-          <ionic-selectable [(ngModel)]="port"
-                            [items]="IRCodes"
-                            itemValueField="irCodeID"
-                            itemTextField="irCodeName"
-                            [canSearch]="true"
-                            (onChange)="portChange($event)">
-          </ionic-selectable>
-        </ion-item>
-
-        <div style="border:1px solid white; padding:5px;" class="rounded" *ngIf="action.campaignIRCodeSelected && !action.campaignFinished && action.needsIrCodeComment">
-          <h5>Comment</h5>
+      <div style="border:1px solid white; padding:5px;" class="rounded" *ngIf="!action.campaignFinished && hasCapexItem && action.campaignIRCodeSelected && action.selectedIRCode.forceCapexScan ">
+        <button class="btn btn-danger btn-block" (click)="removeBarcodeShow()" *ngIf="!removingBarcodes">Remove Capex Item</button><br />
+        <div *ngIf="removingBarcodes">
+          <h5>Scan Barcode(s) to Remove :</h5>
           <div class="form-row">
             <div class="form-group col-12">
-              <label>Installer Comment:</label>
-              <textarea type="text" class="form-control" [(ngModel)]="action.IRCodeComment" placeholder="{{action.IRCodeComment}}" (click)="clearIRCode()"></textarea>
+              <label>Scan the barcode to Remove :</label>
+              <input type="text" class="form-control" placeholder="Scan barcode:" (keyup.enter)="scanBarcodeToRemove($event)" />
+              <div>
+                <div *ngFor="let barcode of action.barcodesToRemove" class="btn btn-primary">
+                  {{barcode.barcode}}<i class="fa fa-times-circle fa-lg" (click)="removeBarcodeFromBarcodesToRemove(barcode)"></i>
+                </div>
 
+
+              </div>
             </div>
-
           </div>
         </div>
         <br />
+      </div>
 
-        <div style="border:1px solid white; padding:5px;" class="rounded" *ngIf="!action.campaignFinished && hasCapexItem && action.campaignIRCodeSelected && action.selectedIRCode.forceCapexScan ">
-          <button class="btn btn-danger btn-block" (click)="removeBarcodeShow()" *ngIf="!removingBarcodes">Remove Capex Item</button><br />
-          <div *ngIf="removingBarcodes">
-            <h5>Scan Barcode(s) to Remove :</h5>
-            <div class="form-row">
-              <div class="form-group col-12">
-                <label>Scan the barcode to Remove :</label>
-                <input type="text" class="form-control" placeholder="Scan barcode:" (keyup.enter)="scanBarcodeToRemove($event)" />
-                <div>
-                  <div *ngFor="let barcode of action.barcodesToRemove" class="btn btn-primary">
-                    {{barcode.barcode}}<i class="fa fa-times-circle fa-lg" (click)="removeBarcodeFromBarcodesToRemove(barcode)"></i>
-                  </div>
+      <div style="border:1px solid white; padding:5px;" class="rounded" *ngIf="!action.campaignFinished && hasCapexItem &&  action.campaignIRCodeSelected && action.selectedIRCode.forceCapexScan ">
+        <!--we need to scan all barcodes here-->
 
 
-                </div>
+        <h5>Choose amount to install : </h5>
+        <label id="example-radio-group-label">Choose how many to install</label>
+
+        <ion-list>
+          <ion-radio-group value="biff">
+            <ion-list-header>
+              <ion-label>Name</ion-label>
+            </ion-list-header>
+
+            <ion-item *ngFor="let amount of amountOfInstallations" (click)="setAmountToInstall(amount + 1)">
+              <ion-label> {{amount + 1}}</ion-label>
+              <ion-radio slot="start" value="amount + 1"></ion-radio>
+            </ion-item>
+
+
+          </ion-radio-group>
+        </ion-list>
+
+        <h5>Scan Barcode :</h5>
+        <div *ngFor="let barcodeScanning of action.masterItemWithBarcodes" class="form-row">
+          <div class="form-group col-12">
+            <label>Scan {{barcodeScanning.masterItemName}} x {{barcodeScanning.amountRequired * amountChosenToInstall}} Barcode :</label>
+            <input *ngIf="barcodeScanning.scannedBarcodes.length   != (barcodeScanning.amountRequired * amountChosenToInstall)" type="text" class="form-control" placeholder="Scan barcode:" (keyup.enter)="updateBarcodeScanned($event,barcodeScanning.barcodes,barcodeScanning.masterItemId,'masteritem')" />
+            <div>
+              <div *ngFor="let barcode of barcodeScanning.scannedBarcodes" class="btn btn-primary">
+                {{barcode.barcode}}<i class="fa fa-times-circle fa-lg" (click)="removeBarcodeFromScanned(barcode,barcodeScanning.masterItemId,'masteritem')"></i>
               </div>
+
             </div>
           </div>
-          <br />
         </div>
 
-        <div style="border:1px solid white; padding:5px;" class="rounded" *ngIf="!action.campaignFinished && hasCapexItem &&  action.campaignIRCodeSelected && action.selectedIRCode.forceCapexScan ">
-          <!--we need to scan all barcodes here-->
-
-
-          <h5>Choose amount to install : </h5>
-          <label id="example-radio-group-label">Choose how many to install</label>
-
-          <ion-list>
-            <ion-radio-group value="biff">
-              <ion-list-header>
-                <ion-label>Name</ion-label>
-              </ion-list-header>
-
-              <ion-item *ngFor="let amount of amountOfInstallations" (click)="setAmountToInstall(amount + 1)">
-                <ion-label> {{amount + 1}}</ion-label>
-                <ion-radio slot="start" value="amount + 1"></ion-radio>
-              </ion-item>
-
-             
-            </ion-radio-group>
-          </ion-list>
-
-          <h5>Scan Barcode :</h5>
-          <div *ngFor="let barcodeScanning of action.masterItemWithBarcodes" class="form-row">
-            <div class="form-group col-12">
-              <label>Scan {{barcodeScanning.masterItemName}} x {{barcodeScanning.amountRequired * amountChosenToInstall}} Barcode :</label>
-              <input *ngIf="barcodeScanning.scannedBarcodes.length   != (barcodeScanning.amountRequired * amountChosenToInstall)" type="text" class="form-control" placeholder="Scan barcode:" (keyup.enter)="updateBarcodeScanned($event,barcodeScanning.barcodes,barcodeScanning.masterItemId,'masteritem')" />
-              <div>
-                <div *ngFor="let barcode of barcodeScanning.scannedBarcodes" class="btn btn-primary">
-                  {{barcode.barcode}}<i class="fa fa-times-circle fa-lg" (click)="removeBarcodeFromScanned(barcode,barcodeScanning.masterItemId,'masteritem')"></i>
-                </div>
-
+        <div *ngFor="let barcodeScanning of action.masterItemGroupWithBarcodes" class="form-row">
+          <div class="form-group col-12">
+            <label>Scan {{barcodeScanning.masterItemGroupName}} x {{barcodeScanning.amountRequired * amountChosenToInstall}} Barcode :</label>
+            <input *ngIf="barcodeScanning.scannedBarcodes.length   != (barcodeScanning.amountRequired * amountChosenToInstall)" type="text" class="form-control" placeholder="Scan barcode:" (keyup.enter)="updateBarcodeScanned($event,barcodeScanning.barcodes,barcodeScanning.masterItemGroupId,'group')" />
+            <div>
+              <div *ngFor="let barcode of barcodeScanning.scannedBarcodes" class="btn btn-primary">
+                {{barcode.barcode}}<i class="fa fa-times-circle fa-lg" (click)="removeBarcodeFromScanned(barcode,barcodeScanning.masterItemGroupId,'group')"></i>
               </div>
+
             </div>
           </div>
-
-          <div *ngFor="let barcodeScanning of action.masterItemGroupWithBarcodes" class="form-row">
-            <div class="form-group col-12">
-              <label>Scan {{barcodeScanning.masterItemGroupName}} x {{barcodeScanning.amountRequired * amountChosenToInstall}} Barcode :</label>
-              <input *ngIf="barcodeScanning.scannedBarcodes.length   != (barcodeScanning.amountRequired * amountChosenToInstall)" type="text" class="form-control" placeholder="Scan barcode:" (keyup.enter)="updateBarcodeScanned($event,barcodeScanning.barcodes,barcodeScanning.masterItemGroupId,'group')" />
-              <div>
-                <div *ngFor="let barcode of barcodeScanning.scannedBarcodes" class="btn btn-primary">
-                  {{barcode.barcode}}<i class="fa fa-times-circle fa-lg" (click)="removeBarcodeFromScanned(barcode,barcodeScanning.masterItemGroupId,'group')"></i>
-                </div>
-
-              </div>
-            </div>
-          </div>
-          <br />
         </div>
-        <div *ngIf="action.isMerchandisingContract">
-          <h5>Questions</h5>
-          <div *ngFor="let question of action.media.questions" style="border:1px solid white; padding:5px;" class="rounded">
+        <br />
+      </div>
+      <div *ngIf="action.isMerchandisingContract">
+        <h5>Questions</h5>
+        <div *ngFor="let question of action.media.questions" style="border:1px solid white; padding:5px;" class="rounded">
 
-            <!--<span>{{question.quetion}}</span>-->
-            <app-opsclient-answer class="col-sm-3" [action]="action" [selectedAnswers]="action.installationScheduleQuestionsAndAnswers" [question]="question" (actionEvent)="getAnswerBack($event)"></app-opsclient-answer>
-            <!--<div *ngFor="let answer of question.questionsAndAnswers">
-        {{answer.answers.answer}}
+          <!--<span>{{question.quetion}}</span>-->
+          an
+          <!--<app-opsclient-answer class="col-sm-3" [action]="action" [selectedAnswers]="action.installationScheduleQuestionsAndAnswers" [question]="question" (actionEvent)="getAnswerBack($event)"></app-opsclient-answer>-->
+          <!--<div *ngFor="let answer of question.questionsAndAnswers">
+            {{answer.answers.answer}}
 
-      </div>-->
-          </div>
+          </div>-->
         </div>
+      </div>
 
-        <div class="col-md-12" *ngIf="!action.campaignPictureTaken && action.campaignSpecialInstructionsRead && action.campaignIRCodeSelected && action.selectedIRCode.needsPicture && !action.isMerchandisingContract">
-          <input type="file" #file placeholder="Choose file" (change)="uploadFile(file.files)" accept="image/*" style="display:none" capture="camera">
-          <button style="width:100%" type="button" class="btn btn-success" (click)="file.click()">Take Photo</button>
+      <div class="col-md-12" *ngIf="!action.campaignPictureTaken && action.campaignSpecialInstructionsRead && action.campaignIRCodeSelected && action.selectedIRCode.needsPicture && !action.isMerchandisingContract">
+        <input type="file" #file placeholder="Choose file" (change)="uploadFile(file.files)" accept="image/*" style="display:none" capture="camera">
+        <button style="width:100%" type="button" class="btn btn-success" (click)="file.click()">Take Photo</button>
 
-        </div>
+      </div>
 
-        <div class="col-md-12" *ngIf="action.campaignPictureTaken && action.campaignSpecialInstructionsRead && action.campaignIRCodeSelected && action.selectedIRCode.needsPicture && !action.isMerchandisingContract">
-          <input type="file" #file placeholder="Choose file" (change)="uploadFile(file.files)" accept="image/*" style="display:none" capture="camera">
-          <button style="width:100%" type="button" class="btn btn-success" (click)="file.click()">Edit Photo</button>
+      <div class="col-md-12" *ngIf="action.campaignPictureTaken && action.campaignSpecialInstructionsRead && action.campaignIRCodeSelected && action.selectedIRCode.needsPicture && !action.isMerchandisingContract">
+        <input type="file" #file placeholder="Choose file" (change)="uploadFile(file.files)" accept="image/*" style="display:none" capture="camera">
+        <button style="width:100%" type="button" class="btn btn-success" (click)="file.click()">Edit Photo</button>
 
-        </div>
-        <div class="card-footer" *ngIf="action.campaignIRCodeSelected && !action.isMerchandisingContract && !action.campaignFinished && (!action.needsIrCodeComment || action.IRCodeComment != '') && (action.campaignPictureTaken || !action.selectedIRCode.needsPicture) && (scannedCapexItem || !action.forceCapexScan)">
-          <!--Now we can finish the campaign-->
-          <input type="button" class="btn btn-primary btn-block" (click)="finishCampaign()" style="z-index:100" value="Finish Campaign" />
-        </div>
+      </div>
+      <br />
+      <div class="col-md-12" style="width: 100%" *ngIf="action.campaignIRCodeSelected && !action.isMerchandisingContract && !action.campaignFinished && (!action.needsIrCodeComment || action.IRCodeComment != '') && (action.campaignPictureTaken || !action.selectedIRCode.needsPicture) && (scannedCapexItem || !action.forceCapexScan)">
+        <!--Now we can finish the campaign-->
+        <input type="button" style="width: 100%;z-index:100" class="btn btn-primary btn-block" (click)="finishCampaign()" value="Finish Campaign" />
+      </div>
 
-        <div class="card-footer" *ngIf="action.isMerchandisingContract && action.campaignPictureTaken && action.allMerchandisingQuestionsAnswered && !action.campaignFinished">
-          <!--Now we can finish the campaign-->
-          <input type="button" class="btn btn-primary btn-block" (click)="finishCampaign()" value="Finish Merchandising Campaign" />
-        </div>
-        <div class="card-footer" *ngIf="action.campaignFinished">
-          <!--Now we can finish the campaign-->
-          <input type="button" class="btn btn-primary btn-block" (click)="openCampaign()" value="Open Campaign" />
-        </div>
-      </ion-card-content>
-   
+      <div class="col-md-12" style="width: 100%" *ngIf="action.isMerchandisingContract && action.campaignPictureTaken && action.allMerchandisingQuestionsAnswered && !action.campaignFinished">
+        <!--Now we can finish the campaign-->
+        <input type="button" style="width: 100%" class="btn btn-primary btn-block" (click)="finishCampaign()" value="Finish Merchandising Campaign" />
+      </div>
+      <br />
+      <div class="col-md-12" style="width: 100%" *ngIf="action.campaignFinished">
+        <!--Now we can finish the campaign-->
+        <input type="button" class="btn btn-primary btn-block" style="width: 100%" (click)="openCampaign()" value="Open Campaign" />
+      </div>
+    </ion-card-content>
+
   </ion-card>
-  </ion-content>
+  <!--<ion-modal [isOpen]="true">
+    <ng-template>
+      <app-modal-content>asdfsfdasdf</app-modal-content>
+    </ng-template>
+  </ion-modal>-->
+
+</ion-content>
+
+
