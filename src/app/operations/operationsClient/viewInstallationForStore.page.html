@@ -56,7 +56,7 @@
       </ion-card>
     </div>
     <div *ngSwitchCase="'completed'">
-      <ion-card *ngFor="let visits of storeInstallationsCompleted | filter:searchTerm" [ngClass]="{'bg-primary mb-3': visits.status == 'Install','bg-success  mb-3' : visits.status == 'Running','bg-danger   mb-3' : visits.status == 'Remove'}">
+      <ion-card *ngFor="let visits of storeInstallationsCompleted | filter:searchTerm" (click)="getActionForCampaign(visits)" [ngClass]="{'bg-primary mb-3': visits.status == 'Install','bg-success  mb-3' : visits.status == 'Running','bg-danger   mb-3' : visits.status == 'Remove'}">
         <ion-card-header style="color:white">
           {{visits.qtyToInstall}} x {{visits.mediaType}}
         </ion-card-header>

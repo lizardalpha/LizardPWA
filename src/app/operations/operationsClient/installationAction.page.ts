@@ -16,6 +16,7 @@ import { CompressNormalImagesService } from '../../_services/CompressNormalImage
 import { take } from 'rxjs/operators';
 import { ExifService } from '../../_services/exif.service';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { ModalController } from '@ionic/angular';
 
 const httpOptions = {
   headers: new HttpHeaders({ 'Content-Type': 'application/json' })
@@ -34,6 +35,7 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
   public port: any;
   public ports: any[];
   public IRCodes: any[];
+  public irCode: any;
   public action: CampaignVisit;
   public currentStore: StoreVisitModel;
   public store: StoreVisitModel;
@@ -57,11 +59,11 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
   tempBarcodeScanned: TempBarcode;
   public removingBarcodes: boolean = false;
   barcodesToRemove: barcodesWithId[];
-  public isModalOpen: boolean = true;
+  public isModalOpen: boolean = false;
   public skipStoreVisitBit: boolean = false;
 
 
-  constructor(private http: HttpClient,private router: Router, private route: ActivatedRoute, private formBuilder: FormBuilder, private opsClientService: OpsClientService, private storage: Storage, private opsAdminService: OpsAdminService, private opsUniversalService: OpsUniversalService, private compressImage: CompressImageService, private compressImageNormal: CompressNormalImagesService,private exifService: ExifService) {
+  constructor(private http: HttpClient,private router: Router, private route: ActivatedRoute, private formBuilder: FormBuilder, private opsClientService: OpsClientService, private storage: Storage, private opsAdminService: OpsAdminService, private opsUniversalService: OpsUniversalService, private compressImage: CompressImageService, private compressImageNormal: CompressNormalImagesService,private exifService: ExifService,public modal: ModalController) {
     this.list = new Array();
    
     try {
@@ -73,8 +75,8 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
         this.store = this.router.getCurrentNavigation().extras.state.allInstallation;
         this.getIRCodes();
        
-        localStorage.setItem('InstallationAction', JSON.stringify(this.action));
-        localStorage.setItem('StoreInstallations', JSON.stringify(this.store));
+        storage.set('InstallationAction', this.action);
+        storage.set('StoreInstallations', this.store);
 
         if (this.action.selectedIRCode != null) {
           this.action.campaignIRCodeSelected = true;
@@ -86,15 +88,24 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
         //this.getIRCodeBack();
       }
       else {
-        this.action = JSON.parse(localStorage.getItem('InstallationAction'))
-        this.store = JSON.parse(localStorage.getItem('StoreInstallations'))
-        if (this.action.selectedIRCode != null) {
-          this.action.campaignIRCodeSelected = true;
+        //alert('here');
+        ////get from the right place.
+       
+        //this.getActionData().then(x => {
+          
+        //});
 
-        }
-        else {
-
-        }
+        //storage.get('InstallationAction').then(x => {
+        //  alert('here first');
+        //  console.log(this.action);
+        //  this.action = x;
+        //});
+        //storage.get('StoreInstallations').then(x => {
+        //  this.store = x;
+        //});
+        //this.action = JSON.parse(localStorage.getItem('InstallationAction'))
+        //this.store = JSON.parse(localStorage.getItem('StoreInstallations'))
+        
 
       }
 
@@ -108,20 +119,51 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
    
   }
 
-  ngOnInit() {
-    this.getIRCodes();
-    if (this.action.masterItemWithBarcodes.length > 0 || this.action.masterItemGroupWithBarcodes.length > 0) {
 
-      this.hasCapexItem = true;
-      this.amountOfInstallations = Array.from(Array(this.action.qtyToInstall).keys());
-      alert('it has capex');
-    }
-    else {
-      this.scannedCapexItem = true;
-    }
-    console.log(this.action);
+  getActionData() {
+    return new Promise(resolve => {
+      this.storage.get('InstallationAction').then((data) => {
+        this.action = data;
+
+        return resolve(this.action);
+      });
+
+    });
+  }
+
+  ngOnInit() {
+
+   
+    this.getDataFromStorage();
+    
     
     }
+  async getDataFromStorage() {
+    this.getActionData().then(x => {
+      if (this.action.selectedIRCode != null) {
+        this.action.campaignIRCodeSelected = true;
+
+      }
+      else {
+
+      }
+      this.getIRCodes();
+      if (this.action.masterItemWithBarcodes.length > 0 || this.action.masterItemGroupWithBarcodes.length > 0) {
+
+        this.hasCapexItem = true;
+        this.amountOfInstallations = Array.from(Array(this.action.qtyToInstall).keys());
+
+      }
+      else {
+        this.scannedCapexItem = true;
+      }
+      if (this.action.status == 'Remove') {
+        this.action.campaignSpecialInstructionsRead = true;
+        this.action.campaignPictureTaken = true;
+      }
+    });
+  }
+
 
   acceptSpecialInstructions() {
     this.action.campaignSpecialInstructionsRead = true;
@@ -166,7 +208,7 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
       data => {
        
         this.IRCodes = data;
-        localStorage.setItem('IRCodes', JSON.stringify(this.IRCodes));
+        this.storage.set('IRCodes', this.IRCodes);
 
         if (this.action.selectedIRCode == null) {
 
@@ -458,8 +500,8 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
 
   updateLocalStorage() {
     //first remove it and replace with the new details on the action itself.
-    localStorage.removeItem('InstallationAction');
-    localStorage.setItem('InstallationAction', JSON.stringify(this.action));
+   // localStorage.removeItem('InstallationAction');
+    this.storage.set('InstallationAction', this.action);
 
     //now do the store
     this.store.storeInstallations.map((todo, i) => {
@@ -494,8 +536,8 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
    
    
     //console.log(this.storeVisist.filter(x => x.storeId == this.store.storeId)[0]);
-    localStorage.removeItem('StoreVisists');
-    localStorage.setItem('StoreVisists', JSON.stringify(this.storeVisist));
+    //localStorage.removeItem('StoreVisists');
+    this.storage.set('StoreVisists', this.storeVisist);
 
     this.redirectAterFinishingCampaign();
 
@@ -595,10 +637,13 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
         this.tempBarcodeScanned.type = type;
         this.tempBarcodeScanned.masterItemId = masterItemId;
         this.tempBarcodeScanned.masterItemGroupId = masterItemId;
-        this.barcodeValidity = false;
-        alert('Invalid barcode.')
-       // jQuery('#errorModal').modal('show');
+        this.barcodeValidity = true;
+        //alert('Invalid barcode.')
+      
+        this.isModalOpen = true;
+        //jQuery('#errorModal').modal('show');
         event.target.focus();
+        this.forceBarcodeScan();
         return;
       }
     }
@@ -893,6 +938,7 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
     }
   }
 
+ 
   
 
   private convert(myFile: File, originalFile): Promise<string | ArrayBuffer> {

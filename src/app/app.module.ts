@@ -24,6 +24,12 @@ import { IonicSelectableModule } from 'ionic-selectable';
 import { ModalController } from '@ionic/angular';
 import { Ng2SearchPipeModule } from 'ng2-search-filter';
 
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { library } from '@fortawesome/fontawesome-svg-core';
+import { fas } from '@fortawesome/free-solid-svg-icons';
+import { far } from '@fortawesome/free-regular-svg-icons';
+import { fab } from '@fortawesome/free-brands-svg-icons';
+
 @NgModule({
   declarations: [
     AppComponent
@@ -56,7 +62,8 @@ import { Ng2SearchPipeModule } from 'ng2-search-filter';
   exports: [FormsModule,
     ItemsearchPipe,
     ReactiveFormsModule,
-    Ng2SearchPipeModule
+    Ng2SearchPipeModule,
+    
     ],
   bootstrap: [AppComponent],
 })

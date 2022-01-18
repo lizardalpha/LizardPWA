@@ -32,6 +32,7 @@ export class OpsHomeClientStoresInstallationsComponent {
   public storeInstallationsFiltered: CampaignVisit[];
   searchTerm: string;
   public IRCodes: any[];
+  public irCode: any;
   public skipVisitCommentValue: string = '';
   public skipVisitSelectedIRCode: any;
 
@@ -90,6 +91,7 @@ export class OpsHomeClientStoresInstallationsComponent {
     //console.log(this.storeInstallationsFiltered);
   }
   getActionForCampaign(storeInstallation) {
+   
     this.router.navigate(['/Operations/InstallationAction/'], { state: { data: storeInstallation, allInstallation: this.store, filterAction: this.filterAction } });
   }
   changeFilterOld(action) {

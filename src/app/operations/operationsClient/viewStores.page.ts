@@ -7,6 +7,7 @@ import { OpsClientService } from '../../_services/opsClient.service';
 import { Storage } from '@ionic/storage-angular';
 import { NavController } from '@ionic/angular';
 import { Ng2SearchPipeModule } from 'ng2-search-filter';
+import { StoreVisitModel } from '../../_models/StoreVisitModel';
 
 @Component({
     selector: 'app-login',
@@ -231,7 +232,39 @@ export class OpsHomeClientStoresComponent implements OnInit {
 
   }
 
-  syncStore(store) {
+  syncStore(store: StoreVisitModel) {
+    //we need to sync the store now
+    //console.log(store);
+
+    this.opsClientService.updateStoreVisistByStore(store).subscribe(
+      data => {
+        //now refresh the store list.
+        //we can fix it now.
+        if (data == true) {
+
+          this.storeVisistFiltered.map((todo, i) => {
+            if (todo.storeId == store.storeId) {
+              store.storeVisitOutOfSync = false;
+              this.storeVisist[i] = store;
+
+              //this.store.storeInstallations[i] = this.action;
+            }
+          });
+
+          this.storage.remove('StoreVisists');
+          this.storage.set('StoreVisists', this.storeVisist);
+        
+        }
+        else {
+          alert('Something went wrong, please contact the administrator');
+        }
+      },
+      err => {
+        console.log(err);
+
+      }
+    );
+    //this.synchPhotosFull();
   }
 
   submit(term?: string) {

@@ -9,13 +9,15 @@ import { OpsHomeInstallationActionComponentRoutingModule } from './installationA
 
 import { OpsHomeClientStoresInstallationsActionComponent } from './installationAction.page';
 
+declare var jQuery: any;
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
     IonicModule,
     IonicSelectableModule,
-    OpsHomeInstallationActionComponentRoutingModule
+    OpsHomeInstallationActionComponentRoutingModule,
+    
   ],
   declarations: [OpsHomeClientStoresInstallationsActionComponent]
 })
