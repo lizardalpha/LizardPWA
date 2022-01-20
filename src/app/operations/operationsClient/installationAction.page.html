@@ -98,7 +98,7 @@
 
         <ion-list>
           <ion-radio-group value="biff">
-          
+
             <ion-item *ngFor="let amount of amountOfInstallations" (click)="setAmountToInstall(amount + 1)">
               <ion-label> {{amount + 1}}</ion-label>
               <ion-radio slot="start" value="amount + 1"></ion-radio>
@@ -144,9 +144,9 @@
           Answer
           <!--<app-opsclient-answer class="col-sm-3" [action]="action" [selectedAnswers]="action.installationScheduleQuestionsAndAnswers" [question]="question" (actionEvent)="getAnswerBack($event)"></app-opsclient-answer>-->
           <!--<div *ngFor="let answer of question.questionsAndAnswers">
-            {{answer.answers.answer}}
+        {{answer.answers.answer}}
 
-          </div>-->
+      </div>-->
         </div>
       </div>
       <div style="border:1px solid white; padding:5px;" class="rounded">
@@ -165,6 +165,7 @@
         </div>
         <br />
       </div>
+      {{hasCapexItem}}
       <div class="col-md-12" style="width: 100%" *ngIf="action.campaignIRCodeSelected && !action.isMerchandisingContract && !action.campaignFinished && (!action.needsIrCodeComment || action.irCodeComment != '') && (action.campaignPictureTaken || !action.selectedIRCode.needsPicture) && (scannedCapexItem || !action.forceCapexScan)">
 
         <!--Now we can finish the campaign-->

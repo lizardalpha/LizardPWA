@@ -66,17 +66,21 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
   constructor(private http: HttpClient,private router: Router, private route: ActivatedRoute, private formBuilder: FormBuilder, private opsClientService: OpsClientService, private storage: Storage, private opsAdminService: OpsAdminService, private opsUniversalService: OpsUniversalService, private compressImage: CompressImageService, private compressImageNormal: CompressNormalImagesService,private exifService: ExifService,public modal: ModalController) {
     this.list = new Array();
    
+    
+   
+  }
+
+  getDataInitially() {
     try {
-     
 
+      alert('it definately goes here');
       if (this.router.getCurrentNavigation().extras.state != null) {
-
+        alert('it does load here');
         this.action = this.router.getCurrentNavigation().extras.state.data;
         this.store = this.router.getCurrentNavigation().extras.state.allInstallation;
-        this.getIRCodes();
-       
-        storage.set('InstallationAction', this.action);
-        storage.set('StoreInstallations', this.store);
+
+        this.storage.set('InstallationAction', this.action);
+        this.storage.set('StoreInstallations', this.store);
 
         if (this.action.selectedIRCode != null) {
           this.action.campaignIRCodeSelected = true;
@@ -85,14 +89,23 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
         else {
 
         }
+        if (this.action.masterItemWithBarcodes.length > 0 || this.action.masterItemGroupWithBarcodes.length > 0) {
+
+          this.hasCapexItem = true;
+          this.amountOfInstallations = Array.from(Array(this.action.qtyToInstall).keys());
+
+        }
+        else {
+          this.scannedCapexItem = true;
+        }
         //this.getIRCodeBack();
       }
       else {
         //alert('here');
         ////get from the right place.
-       
+
         //this.getActionData().then(x => {
-          
+
         //});
 
         //storage.get('InstallationAction').then(x => {
@@ -105,7 +118,7 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
         //});
         //this.action = JSON.parse(localStorage.getItem('InstallationAction'))
         //this.store = JSON.parse(localStorage.getItem('StoreInstallations'))
-        
+
 
       }
 
@@ -116,9 +129,7 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
     }
     finally {
     }
-   
   }
-
 
   getActionData() {
     return new Promise(resolve => {
@@ -131,14 +142,36 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
     });
   }
 
-  ngOnInit() {
+  getStoreData() {
+    return new Promise(resolve => {
+      this.storage.get('StoreInstallations').then((data) => {
+        this.store = data;
 
-   
-    this.getDataFromStorage();
+        return resolve(this.action);
+      });
+
+    });
+  }
+
+  ngOnInit() {
+    this.getIRCodes();
+    this.getDataInitially();
+
+    if (!this.action) {
+      this.getDataFromStorage();
+      
+    }
+    if (!this.store) {
+      this.getStoreData();
+    }
     
+    if (this.action) {
+      this.checkIfAllBarcodesScanned();
+    }
     
     }
   async getDataFromStorage() {
+    alert('it went to storage');
     this.getActionData().then(x => {
       if (this.action.selectedIRCode != null) {
         this.action.campaignIRCodeSelected = true;
@@ -147,6 +180,7 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
       else {
 
       }
+      this.checkIfAllBarcodesScanned();
       this.getIRCodes();
       if (this.action.masterItemWithBarcodes.length > 0 || this.action.masterItemGroupWithBarcodes.length > 0) {
 
@@ -180,7 +214,7 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
 
     this.action.campaignFinished = false;
     this.updateStoreVisitToApi();
-    //this.checkIfAllBarcodesScanned();
+    this.checkIfAllBarcodesScanned();
   }
 
   clearIRCode() {
@@ -499,6 +533,9 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
   }
 
   updateLocalStorage() {
+    //we need to update this correctly as well
+
+
     //first remove it and replace with the new details on the action itself.
    // localStorage.removeItem('InstallationAction');
     this.storage.set('InstallationAction', this.action);
@@ -524,22 +561,26 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
         if (todo.storeId == this.store.storeId) {
           console.log(todo.storeId);
           this.storeVisist[i] = this.store;
+          console.log(this.store);
           //this.store.storeInstallations[i] = this.action;
         }
       });
+
+      this.storage.set('StoreInstallations', this.store);
       this.storage.set('StoreVisists', this.storeVisist);
       this.currentStore = this.storeVisist.filter(x => x.storeId == this.store.storeId)[0];
       this.currentStore.storeInstallations.filter(x => x.installationScheduleCurrentID == this.action.installationScheduleCurrentID)[0] = this.action;
       //console.log(this.currentStore);
       this.storeVisist.filter(x => x.storeId == this.store.storeId)[0] = this.currentStore;
+      this.redirectAterFinishingCampaign();
     });
    
    
     //console.log(this.storeVisist.filter(x => x.storeId == this.store.storeId)[0]);
     //localStorage.removeItem('StoreVisists');
-    this.storage.set('StoreVisists', this.storeVisist);
+    //this.storage.set('StoreVisists', this.storeVisist);
 
-    this.redirectAterFinishingCampaign();
+   
 
   }
   finishCampaign() {
@@ -567,6 +608,12 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
   }
 
   redirectAterFinishingCampaign() {
+
+    console.log('it should now finish, and the store you are looking for is : ');
+    console.log(this.store);
+
+ 
+
     if (this.action.campaignFinished == true) {
       var isStoreCompleted = true;
       this.store.storeInstallations.forEach(function (value) {
@@ -582,7 +629,7 @@ export class OpsHomeClientStoresInstallationsActionComponent implements OnInit {
         this.router.navigate(['/Operations/'], { state: { data: this.store } });
       }
       else {
-        this.router.navigate(['/Operations/Installations/'], { state: { data: this.store, filterAction: this.viewInstallationsFilterAction } });
+        this.router.navigate(['/Operations/Installations/'], { state: { data: this.store, filterAction: this.viewInstallationsFilterAction , action : this.action} });
       }
     }
   }

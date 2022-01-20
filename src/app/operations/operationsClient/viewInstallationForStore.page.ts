@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CampaignVisit, StoreVisitModel } from '../../_models/StoreVisitModel';
@@ -13,7 +13,7 @@ import { OpsAdminService } from '../../_services/opsAdmin.service';
   templateUrl: './viewInstallationForStore.page.html',
   styleUrls: ['./viewInstallationForStore.page.scss']
 })
-export class OpsHomeClientStoresInstallationsComponent {
+export class OpsHomeClientStoresInstallationsComponent implements OnInit {
   segment: string;
   public endPoint = "http://192.168.0.56:7798/api/";
   public store: StoreVisitModel;
@@ -46,48 +46,158 @@ export class OpsHomeClientStoresInstallationsComponent {
   hasImagesToUpload: boolean = false;
   amountOfImagesToUpload: number = 0;
   constructor(private router: Router, private http: HttpClient, private _Activatedroute: ActivatedRoute, private opsUniversalService: OpsUniversalService, private opsClientService: OpsClientService, private opsAdminService: OpsAdminService, private storage: Storage) {
-    this.imageActionIDs = new Array();
+    //this.getInitialData();
     if (this.router.getCurrentNavigation().extras.state != null) {
+      alert('didnt go here');
       this.filterAction = this.router.getCurrentNavigation().extras.state.filterAction;
-
+      console.log(this.router.getCurrentNavigation().extras.state.data);
       localStorage.removeItem('StoreInstallations');
       this.store = this.router.getCurrentNavigation().extras.state.data;
-
+      console.log(this.store);
       localStorage.setItem('StoreInstallations', JSON.stringify(this.store));
 
+      if (this.store) {
+        alert('should have sent the right data through');
+        this.ActionFilter = this.store.storeInstallations.map(item => item.status)
+          .filter((value, index, self) => self.indexOf(value) === index);
+        this.storeFiltered = this.store;
+        this.Title = this.store.chainName + ' - ' + this.store.storeName;
+        this.changeStoreVisitText(this.store.StoreVsistStarted);
+
+
+        this.segment = 'pending';
+        this.IRCodes = new Array();
+        this.storeInstallationsFiltered = this.store.storeInstallations;
+
+        this.storeInstallationsPending = this.store.storeInstallations.filter(x => x.campaignFinished == false);
+        this.storeInstallationsCompleted = this.store.storeInstallations.filter(x => x.campaignFinished == true);
+
+        if (!this.opsClientService.checkForSlowSpeed()) {
+          this.getImagesToSync();
+          //this.syncPhotos();
+
+        }
+      }
+
     }
-    else {
-      this.store = JSON.parse(localStorage.getItem('StoreInstallations'))
+  }
 
-      //set the filters here
+  ionViewWillEnter() {
+
+    //so, it will always come in here first
+    //it never gets the router here though, so we definately need to change things up a bit.
+    //we need to check here if the stuff changed from the installation action page, and if so, we need to update it, if not, do nothing.
+    this.store = null;
+   
+    this.getDataCorrectlyHere();
+    
+
+    //console.log(this.store);
+    //this.getDataAfterRedirect();
+  }
 
 
+  getDataCorrectlyHere() {
+    if (!this.store) {
+      alert('it did go here');
+      //ok, we need to load the store from the right place
+      this.imageActionIDs = new Array();
+      this.storage.get('StoreInstallations').then(data => {
+        this.store = data;
+        if (this.store) {
+          this.ActionFilter = this.store.storeInstallations.map(item => item.status)
+            .filter((value, index, self) => self.indexOf(value) === index);
+          this.storeFiltered = this.store;
+          this.Title = this.store.chainName + ' - ' + this.store.storeName;
+          this.changeStoreVisitText(this.store.StoreVsistStarted);
+
+
+          this.segment = 'pending';
+          this.IRCodes = new Array();
+          this.storeInstallationsFiltered = this.store.storeInstallations;
+
+          this.storeInstallationsPending = this.store.storeInstallations.filter(x => x.campaignFinished == false);
+          this.storeInstallationsCompleted = this.store.storeInstallations.filter(x => x.campaignFinished == true);
+
+          if (!this.opsClientService.checkForSlowSpeed()) {
+            this.getImagesToSync();
+            //this.syncPhotos();
+
+          }
+          this.ngOnInit();
+        }
+      });
     }
-    localStorage.setItem('StoreInstallations', JSON.stringify(this.store));
+   
+
+  }
+
+  getDataAfterRedirect() {
+
+    this.storage.get('StoreInstallations').then(data => {
+      this.store = data;
+      console.log(this.store);
+    });
+  }
+  getInitialData() {
+   
+   
+    this.storage.set('StoreInstallations', this.store);
     if (this.store) {
       this.ActionFilter = this.store.storeInstallations.map(item => item.status)
         .filter((value, index, self) => self.indexOf(value) === index);
       this.storeFiltered = this.store;
       this.Title = this.store.chainName + ' - ' + this.store.storeName;
+      this.changeStoreVisitText(this.store.StoreVsistStarted);
     }
 
 
-    this.changeStoreVisitText(this.store.StoreVsistStarted);
-
+   
   }
+
   ngOnInit() {
-    this.segment = 'pending';
-    this.IRCodes = new Array();
-    this.storeInstallationsFiltered = this.store.storeInstallations;
+    // this.getDataCorrectlyHere();
+    try {
+      if (this.router.getCurrentNavigation().extras.state != null) {
+        alert('didnt go here');
+        this.filterAction = this.router.getCurrentNavigation().extras.state.filterAction;
+        console.log(this.router.getCurrentNavigation().extras.state.data);
+        this.storage.remove('StoreInstallations');
+        this.store = this.router.getCurrentNavigation().extras.state.data;
+        console.log(this.store);
+        this.storage.set('StoreInstallations', this.store);
 
-    this.storeInstallationsPending = this.store.storeInstallations.filter(x => x.campaignFinished == false);
-    this.storeInstallationsCompleted = this.store.storeInstallations.filter(x => x.campaignFinished == true);
+        if (this.store) {
+          alert('should have sent the right data through');
+          this.ActionFilter = this.store.storeInstallations.map(item => item.status)
+            .filter((value, index, self) => self.indexOf(value) === index);
+          this.storeFiltered = this.store;
+          this.Title = this.store.chainName + ' - ' + this.store.storeName;
+          this.changeStoreVisitText(this.store.StoreVsistStarted);
 
-    if (!this.opsClientService.checkForSlowSpeed()) {
-      this.getImagesToSync();
-      //this.syncPhotos();
 
+          this.segment = 'pending';
+          this.IRCodes = new Array();
+          this.storeInstallationsFiltered = this.store.storeInstallations;
+
+          this.storeInstallationsPending = this.store.storeInstallations.filter(x => x.campaignFinished == false);
+          this.storeInstallationsCompleted = this.store.storeInstallations.filter(x => x.campaignFinished == true);
+
+          if (!this.opsClientService.checkForSlowSpeed()) {
+            this.getImagesToSync();
+            //this.syncPhotos();
+
+          }
+        }
+
+      }
     }
+    catch
+    {
+      console.log(this.store);
+    }
+  
+    
     //console.log(this.storeInstallationsFiltered);
   }
   getActionForCampaign(storeInstallation) {

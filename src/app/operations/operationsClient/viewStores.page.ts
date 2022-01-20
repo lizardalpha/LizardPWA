@@ -34,6 +34,7 @@ export class OpsHomeClientStoresComponent implements OnInit {
   public showStockDetails: boolean = false;
   public allInstallationsForView: any[];
   public mustSync: boolean = false;
+  public storeVisistFromStorage: any[];
 
   constructor(private router: Router, private route: ActivatedRoute, private formBuilder: FormBuilder, private opsClientService: OpsClientService, private storage: Storage, public navCtrl: NavController) {
     this.currentSpeedSlow = this.opsClientService.checkForSlowSpeed();
@@ -43,25 +44,41 @@ export class OpsHomeClientStoresComponent implements OnInit {
   ngOnInit() {
     //we need to first check if any stores are out of sync before loading from the api.
 
-    this.loadToken('StoreVisists', (result?: any) => {
-      // here your result
-      if (this.storeVisist == null) {
-      //ignore temp obviously
-      }
-      console.log(result);
-      if (result.filter(x => x['storeVisitOutOfSync'] == true).length > 0) {
+    this.storage.get('StoreVisists').then(data => {
+      this.storeVisistFromStorage = data;
+      if (data.filter(x => x['storeVisitOutOfSync'] == true).length > 0) {
         this.mustSync = true;
-        alert(this.mustSync);
+
       }
+
     });
+
+    if (!this.mustSync && !this.currentSpeedSlow) {
+      this.getStoreVisitsFromLive();
+    }
+    else {
+
+      this.storeVisist = this.storeVisistFromStorage;
+    }
+    //this.loadToken('StoreVisists', (result?: any) => {
+    //  // here your result
+    //  if (this.storeVisist == null) {
+    //  //ignore temp obviously
+    //  }
+     
+    //  if (result.filter(x => x['storeVisitOutOfSync'] == true).length > 0) {
+    //    this.mustSync = true;
+        
+    //  }
+    //});
 
     
    }
 
   getStoreVisitsFromLive() {
-    if (!this.currentSpeedSlow && !this.mustSync) {
+   
       this.getStoreVisists('');
-    }
+    
   }
   getStoreVisists(showMessage) {
 
@@ -79,7 +96,7 @@ export class OpsHomeClientStoresComponent implements OnInit {
           this.loadToken('StoreVisists', (result?: any) => {
             // here your result
            
-            console.log(result);
+         
           });
         }
 
@@ -207,12 +224,17 @@ export class OpsHomeClientStoresComponent implements OnInit {
     store.StoreVsistStarted = false;
     let navigationExtras: NavigationExtras = {
       queryParams: {
-        currency: JSON.stringify(store),
+        data: store,
         refresh: true
       }
     };
-    //this.navCtrl.navigateForward(['/Operations/Installations/'],navigationExtras);
-    this.router.navigate(['/Operations/Installations/'], { state: { data: store } });
+    console.log(store);
+   // this.navCtrl.navigateForward(['/Operations/Installations/'],navigationExtras);
+    this.storage.set('StoreInstallations', store).then()
+    {
+      this.router.navigate(['/Operations/Installations/'], { state: { data: store } });
+    }
+  
   }
   // to get a key/value pair
   public loadToken(name, handler: (result?: any) => void): void {
